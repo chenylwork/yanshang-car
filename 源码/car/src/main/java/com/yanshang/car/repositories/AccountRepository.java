@@ -27,6 +27,6 @@ public interface AccountRepository extends JpaRepositoryImplementation<Account,I
      * @param password 加密密码
      * @return
      */
-    Account getByPhoneaAndPassword(String phone,String password);
+    Account getByPhoneAndPassword(String phone,String password);
 
 }

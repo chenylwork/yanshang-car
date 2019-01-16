@@ -6,8 +6,12 @@ import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.commons.PhoneCodeUtil;
 import com.yanshang.car.repositories.AccountRepository;
 import com.yanshang.car.services.AccountService;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.sql.SQLIntegrityConstraintViolationException;
 
 /*
  * @ClassName AccountServiceImpl
@@ -24,18 +28,24 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public NetMessage register(Account account, String code) {
-        if (code != null && !code.equals("")) {
-            if (!PhoneCodeUtil.checkCode(account.getPhone(),code)) {
-                return NetMessage.failNetMessage("","验证码错误！！");
-            }
-        }
         if (!CharacterUtil.checkPhone(account.getPhone())) {
             return NetMessage.failNetMessage("","请输入正确的手机号！！");
+        }
+        if (CharacterUtil.isEmpty(account.getPassword())) {
+            return NetMessage.failNetMessage("","缺少密码！！");
+        }
+        if (code != null && !code.equals("")) {
+            NetMessage netMessage = PhoneCodeUtil.checkCode(account.getPhone(), code);
+            if (netMessage.getStatus() == NetMessage.FAIl) {
+                return netMessage;
+            }
         }
         account.setPassword(CharacterUtil.passEncode(account.getPassword()));
         try{
             accountRepository.save(account);
             return NetMessage.successNetMessage("","注册成功！！");
+        } catch (DataIntegrityViolationException exception){
+            return NetMessage.failNetMessage("","该账户已注册！！");
         } catch (Exception e) {
             e.printStackTrace();
             return NetMessage.errorNetMessage();
@@ -64,7 +74,7 @@ public class AccountServiceImpl implements AccountService {
         if (CharacterUtil.isEmpty(phone) || CharacterUtil.isEmpty(password)){
             return NetMessage.failNetMessage("","缺少参数！！");
         }
-        Account account = accountRepository.getByPhoneaAndPassword(phone, CharacterUtil.passEncode(password));
+        Account account = accountRepository.getByPhoneAndPassword(phone, CharacterUtil.passEncode(password));
         if (account != null && account.getId() != null) {
             return NetMessage.successNetMessage("","登录成功");
         } else {
@@ -74,7 +84,14 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public NetMessage sendCode(String phone) {
-        String code = PhoneCodeUtil.sendCode(phone);
+
+        String code = "";
+        try {
+            code = PhoneCodeUtil.sendCode(phone);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return NetMessage.errorNetMessage();
+        }
         if (!"".equals(code)) {
             return NetMessage.successNetMessage("",code);
         } else {
@@ -84,10 +101,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public NetMessage checkCode(String phone, String code) {
-        if (PhoneCodeUtil.checkCode(phone,code)) {
-            return NetMessage.successNetMessage("","验证成功！！");
-        }
-        return NetMessage.failNetMessage("","验证失败！！");
+        return PhoneCodeUtil.checkCode(phone,code);
     }
 
     @Override

@@ -32,7 +32,7 @@ public class AccountController {
     }
     /**
      * 用户注册
-     * @param account 注册账户
+     * @param account 注册账户:需要phone注册手机，注册密码参数
      * @param code 手机验证码（如果有验证码就验证没有就不验证）
      * @return
      */

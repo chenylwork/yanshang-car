@@ -3,8 +3,10 @@ package com.yanshang.car.commons;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /*
  * @ClassName PhoneCodeUtil
@@ -13,9 +15,9 @@ import java.util.Random;
  * @Date 2019/1/15- 16:12
  * @Version 1.0
  **/
+@Component
 public class PhoneCodeUtil {
 
-    @Autowired
     private static StringRedisTemplate redisTemplate;
 
     @Autowired
@@ -28,16 +30,14 @@ public class PhoneCodeUtil {
      * @param phone
      * @return 发送失败是将返回空字符串，发送成功返回验证码
      */
-    public static String sendCode(String phone) {
+    public static String sendCode(String phone) throws Exception{
+        if (!CharacterUtil.checkPhone(phone)) return "";
         String code = createCode();
-        try {
-            send(phone,code);
-            String encodeCode = createEncodeCode(code);
-            redisTemplate.opsForValue().set(getKey(phone),encodeCode);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
+        send(phone,code);
+        String encodeCode = createEncodeCode(code);
+        String key = getKey(phone);
+        redisTemplate.opsForValue().set(key,encodeCode);
+        redisTemplate.expire(key,TIMEOUT, TIME_TYPE);
         return code;
     }
     /**
@@ -66,12 +66,22 @@ public class PhoneCodeUtil {
      * @param code 未加密的验证码
      * @return
      */
-    public static boolean checkCode(String phone,String code) {
-        if (!CharacterUtil.checkPhone(phone)) return false;
+    public static NetMessage checkCode(String phone,String code) {
+        boolean result = false;
+        if (!CharacterUtil.checkPhone(phone)) {
+            return NetMessage.failNetMessage("","请输入正确的手机号！！");
+        };
         String newCode = encodeCode(code);
         String key = getKey(phone);
         String oldCode = redisTemplate.opsForValue().get(key);
-        return newCode.equals(oldCode);
+        if (oldCode == null || oldCode.equals("null")) {
+            return NetMessage.failNetMessage("","请先获取验证码！！！");
+        }
+        if (result = newCode.equals(oldCode)) {
+            redisTemplate.delete(key);
+            return NetMessage.successNetMessage("","验证成功！！！");
+        }
+        return NetMessage.failNetMessage("","验证码错误！！");
     }
 
     /**
@@ -102,5 +112,8 @@ public class PhoneCodeUtil {
         if (code == null) return "";
         return DigestUtils.md5Hex(code);
     }
+
+    private static final long TIMEOUT = 1000;
+    private static final TimeUnit TIME_TYPE = TimeUnit.MINUTES ;
 
 }

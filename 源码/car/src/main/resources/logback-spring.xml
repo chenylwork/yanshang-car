@@ -74,13 +74,13 @@
             <charset>UTF-8</charset>
         </encoder>
         <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">&lt;!&ndash; 只打印错误日志 &ndash;&gt;-->
-        <!--<level>INFO</level>-->
-        <!--<onMatch>ACCEPT</onMatch>-->
-        <!--<onMismatch>DENY</onMismatch>-->
+            <!--<level>INFO</level>-->
+            <!--<onMatch>ACCEPT</onMatch>-->
+            <!--<onMismatch>DENY</onMismatch>-->
         <!--</filter>-->
     </appender>
     <!--日志打印的包的范围，及分类日志文件存储 -->
-    <logger name="com.work.borrow" additivity="false">
+    <logger name="com.yanshang.car" additivity="false">
         <level value="INFO" />
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="ERROR"/>

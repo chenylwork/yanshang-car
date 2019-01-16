@@ -1,6 +1,10 @@
 package com.yanshang.car.commons;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
  * @ClassName CharacterUtil
@@ -17,7 +21,10 @@ public class CharacterUtil {
      * @return
      */
     public static boolean checkPhone(String phone) {
-        return false;
+        String regex = "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$";
+        Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(phone);
+        return m.matches();
     }
 
     /**
@@ -26,7 +33,8 @@ public class CharacterUtil {
      * @return
      */
     public static String passEncode(String password) {
-        return password;
+        if(password == null) password = "";
+        return DigestUtils.md5Hex(password);
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.yanshang.car.bean;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
@@ -14,10 +16,12 @@ import javax.persistence.*;
 @Data
 @Entity
 @Table(name="t_account",uniqueConstraints = {@UniqueConstraint(columnNames = "phone")})
+@AllArgsConstructor
+@NoArgsConstructor
 public class Account {
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String phone; // 手机号
     private String password; // 密码
