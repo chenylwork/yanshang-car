@@ -8,7 +8,7 @@ package com.yanshang.car.bean;
  * @Version 1.0
  **/
 public class Order {
-    
+
     private String orderCode; // 订单编号
     private String money; // 交易金额
     private String start; // 开始时间

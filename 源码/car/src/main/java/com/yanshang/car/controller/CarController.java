@@ -2,8 +2,12 @@ package com.yanshang.car.controller;
 
 import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
+import com.yanshang.car.services.CarService;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /*
@@ -16,6 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/car")
 public class CarController {
+
+    @Autowired
+    private CarService carService;
     /**
      * 录入新汽车信息
      * @param car 汽车信息
@@ -32,20 +39,29 @@ public class CarController {
      * @param brand 汽车品牌
      * @return
      */
-    @RequestMapping("/recommend/{brand}")
-    public NetMessage recommend(@PathVariable("brand") String brand) {
-        return null;
+    @RequestMapping("/recommend")
+    public NetMessage recommend(@RequestParam(value = "brand",defaultValue = "") String brand) {
+        return carService.getRecommend(brand);
     }
 
 
     /**
      * 根据汽车标识获取汽车详细信息
-     * @param carIdentity 汽车标识
+     * @param identity 汽车标识
      * @return
      */
     @RequestMapping("/details")
-    public NetMessage details(String carIdentity) {
-        return null;
+    public NetMessage details(String identity) {
+        return carService.getDetails(identity);
+    }
+
+    /**
+     * 获取全部汽车品牌
+     * @return
+     */
+    @RequestMapping("/brands")
+    public NetMessage brands() {
+        return carService.getAllCarBrand();
     }
 
     /**
@@ -68,6 +84,25 @@ public class CarController {
         return null;
     }
 
+    /**
+     * 获取某汽车的评论信息
+     * @param identity
+     * @return
+     */
+    @RequestMapping("/comments")
+    public NetMessage comments(String identity) {
+        return carService.getComments(identity);
+    }
+
+    /**
+     * 对汽车进行评论发表
+     * @param comment
+     * @return
+     */
+    @RequestMapping("/comment/publish")
+    public NetMessage publishComments(CarComment comment) {
+        return carService.publishComments(comment);
+    }
     /**
      * 根据汽车唯一标识获取该汽车的贷款信息
      * @param identity 汽车唯一标识

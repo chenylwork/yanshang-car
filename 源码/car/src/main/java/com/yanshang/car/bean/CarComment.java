@@ -26,4 +26,5 @@ public class CarComment {
     private String content; // 评论内容
     private String observer; // 评论人
     private String time; // 评论时间
+    private String object; // 评论对象：汽车标识（id）
 }

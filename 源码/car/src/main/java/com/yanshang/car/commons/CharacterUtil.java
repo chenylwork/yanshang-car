@@ -2,7 +2,9 @@ package com.yanshang.car.commons;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +16,8 @@ import java.util.regex.Pattern;
  * @Version 1.0
  **/
 public class CharacterUtil {
+
+
 
     /**
      * 检验手机号格式
@@ -45,4 +49,21 @@ public class CharacterUtil {
     public static boolean isEmpty(String str) {
         return  str == null || str.equals("");
     }
+
+    /**
+     * 获取系统当前时间
+     * @return
+     */
+    public static String dataTime() {
+        String pattern = YEAR + "-" + MONTH + "-" + DAY + " "+ HOUR + ":" + MINUTE + ":" + SECOND + " " + MILLISECOND;
+        return new SimpleDateFormat(pattern).format(new Date());
+    }
+
+    private static final String YEAR = "yyyy"; // 年
+    private static final String MONTH = "mm"; // 月
+    private static final String DAY = "dd"; // 日
+    private static final String HOUR = "HH"; // 时
+    private static final String MINUTE = "MM"; // 分
+    private static final String SECOND = "ss"; // 秒
+    private static final String MILLISECOND = "SSS"; // 毫秒
 }

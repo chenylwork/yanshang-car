@@ -1,15 +1,19 @@
 package com.yanshang.car.aspect;
 
+import com.yanshang.car.commons.NetMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.multipart.MultipartFile;
+import org.thymeleaf.expression.Lists;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /*
  * @ClassName LogAspect
@@ -35,13 +39,33 @@ public class LogAspect {
             put("java.lang.Char", char.class);
         }
     };
+
     /**
      * 设置切入点
      */
     @Pointcut("execution(public * com.yanshang.car.controller.*.*(..))")
-    public void job() {}
+    public void job() {
+    }
 
-    @Before("job()")
+    @Around("execution(public * com.yanshang.car.controller.*.*(..))")
+    public Object handleControllerMethod(ProceedingJoinPoint pjp) {
+
+        NetMessage resultEntity;
+        long start = System.currentTimeMillis();
+        log.info("执行Controller开始: " + pjp.getSignature() + " 参数：" + Arrays.asList(pjp.getArgs()).toString());
+        try {
+            resultEntity = (NetMessage) pjp.proceed(pjp.getArgs());
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            resultEntity = NetMessage.errorNetMessage();
+        }
+        log.info("执行Controller结束: " + pjp.getSignature() + "， 返回值：" + resultEntity.toString());
+        log.info("耗时：" + (System.currentTimeMillis() - start) + "(毫秒).");
+
+        return resultEntity;
+    }
+
+//    @Before("job()")
     public void doBefore(JoinPoint joinPoint) {
         String classType = joinPoint.getSignature().getDeclaringTypeName();
         String methodName = joinPoint.getSignature().getName();
@@ -56,7 +80,7 @@ public class LogAspect {
 //            }
 //        }
         String[] paramsNames = null;
-        log.info("执行方法："+classType+"."+methodName);
+        log.info("执行方法：" + classType + "." + methodName);
         StringBuffer params = new StringBuffer();
 //        DefaultParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 //        try {
@@ -71,19 +95,32 @@ public class LogAspect {
 //            params.append(paramsIterator.next()+"：");
             // 值
             if (data instanceof MultipartFile) {
-                params.append("文件是否空："+(data == null));
+                params.append("文件是否空：" + (data == null));
             } else {
                 params.append(data);
             }
             params.append(";");
         });
-        log.info("请求参数："+ params.toString());
+        log.info("请求参数：" + params.toString());
     }
-    @After("job()")
-    public void doAfter() {}
 
-    @AfterReturning(returning="obj", pointcut = "job()")
-    public void doAfterReturnig(Object obj){
+//    @After("job()")
+    public void doAfter(JoinPoint joinPoint) {
+    }
+
+//    @AfterReturning(returning = "obj", pointcut = "job()")
+    public void doAfterReturnig(Object obj) {
+        if (obj == null) {
+            obj = NetMessage.errorNetMessage();
+        }
         log.info("返回结果：{}", obj);
+    }
+
+//    @AfterThrowing(pointcut = "job()", throwing = "e")
+    public void doException(JoinPoint jp, Throwable e) {
+        if (e != null) {
+            Logger logger = LoggerFactory.getLogger(jp.getSignature().getClass());
+            logger.error(e.getMessage(), e);
+        }
     }
 }

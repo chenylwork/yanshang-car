@@ -2,7 +2,10 @@ package com.yanshang.car.repositories;
 
 import com.yanshang.car.bean.Car;
 import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /*
  * @ClassName CarRepository
@@ -13,4 +16,10 @@ import org.springframework.stereotype.Repository;
  **/
 @Repository
 public interface CarRepository extends JpaRepositoryImplementation<Car,Integer>{
+
+    /**
+     * 主打车标签
+     */
+    String LABEL_RECOMMEND = "";
+
 }
