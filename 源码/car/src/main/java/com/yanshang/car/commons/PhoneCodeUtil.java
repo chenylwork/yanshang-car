@@ -1,5 +1,6 @@
 package com.yanshang.car.commons;
 
+import com.yanshang.car.sms.SMSUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,15 +31,18 @@ public class PhoneCodeUtil {
      * @param phone
      * @return 发送失败是将返回空字符串，发送成功返回验证码
      */
-    public static String sendCode(String phone) throws Exception{
-        if (!CharacterUtil.checkPhone(phone)) return "";
+    public static NetMessage sendCode(String phone){
+        if (!CharacterUtil.checkPhone(phone)) return NetMessage.failNetMessage("","请输入正确的手机号！！");
         String code = createCode();
-        send(phone,code);
-        String encodeCode = createEncodeCode(code);
-        String key = getKey(phone);
-        redisTemplate.opsForValue().set(key,encodeCode);
-        redisTemplate.expire(key,TIMEOUT, TIME_TYPE);
-        return code;
+        NetMessage netMessage = send(phone, code);
+        if (netMessage.getStatus() == NetMessage.SUCCESS) {
+            String encodeCode = createEncodeCode(code);
+            String key = getKey(phone);
+            redisTemplate.opsForValue().set(key,encodeCode);
+            redisTemplate.expire(key,TIMEOUT, TIME_TYPE);
+            netMessage.setContent(code);
+        }
+        return netMessage;
     }
     /**
      * 生成验证码
@@ -89,8 +93,9 @@ public class PhoneCodeUtil {
      * @param phone
      * @param code
      */
-    private static void send(String phone,String code) {
-
+    private static NetMessage send(String phone,String code) {
+        String content = "来个车：\n 您的验证码为："+code+".\n如非本人操作请忽略本信息。";
+        return SMSUtil.send(content, phone);
     }
 
     /**

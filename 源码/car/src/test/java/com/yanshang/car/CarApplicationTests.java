@@ -1,5 +1,7 @@
 package com.yanshang.car;
 
+import com.yanshang.car.commons.NetMessage;
+import com.yanshang.car.sms.SMSUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,16 @@ public class CarApplicationTests {
 	public void contextLoads() {
         String zhangsan = redisTemplate.opsForValue().get("zhangsan");
         System.out.println(zhangsan);
+    }
+
+	/**
+	 * 为sms加入白名单
+	 */
+	@Test
+	public void sms() {
+        NetMessage trust = SMSUtil.trust();
+        System.out.println(trust);
+
     }
 
 

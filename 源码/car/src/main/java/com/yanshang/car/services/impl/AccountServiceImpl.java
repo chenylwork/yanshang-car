@@ -84,19 +84,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public NetMessage sendCode(String phone) {
-
-        String code = "";
-        try {
-            code = PhoneCodeUtil.sendCode(phone);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return NetMessage.errorNetMessage();
-        }
-        if (!"".equals(code)) {
-            return NetMessage.successNetMessage("",code);
-        } else {
-            return NetMessage.failNetMessage("","手机号格式不正确！！");
-        }
+        return PhoneCodeUtil.sendCode(phone);
     }
 
     @Override
