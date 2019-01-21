@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /*
  * @ClassName CarRepository
@@ -191,6 +192,22 @@ public class CarController {
     @RequestMapping("/order/test/save")
     public NetMessage saveTestOrder(TestOrder order) {
         return null;
+    }
+
+    /******************************************************************/
+    /******************************************************************/
+    /******************************************************************/
+    /******************************************************************/
+    /******************************************************************/
+
+    /**
+     * 录入汽车品牌
+     * @param carBrand 汽车品牌对象
+     * @return
+     */
+    @RequestMapping("/save/brand")
+    public NetMessage saveBrand(CarBrand carBrand, MultipartFile file) {
+        return carService.saveBrand(carBrand,file);
     }
 
 

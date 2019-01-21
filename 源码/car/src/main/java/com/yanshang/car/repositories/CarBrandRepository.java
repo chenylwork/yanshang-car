@@ -14,4 +14,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CarBrandRepository extends JpaRepositoryImplementation<CarBrand,Integer> {
 
+    /**
+     * 根据品牌名称获取信息
+     * @param name
+     * @return
+     */
+    CarBrand getByName(String name);
+
 }

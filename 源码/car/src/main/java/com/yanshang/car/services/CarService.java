@@ -1,7 +1,9 @@
 package com.yanshang.car.services;
 
+import com.yanshang.car.bean.CarBrand;
 import com.yanshang.car.bean.CarComment;
 import com.yanshang.car.commons.NetMessage;
+import org.springframework.web.multipart.MultipartFile;
 
 /*
  * @ClassName CarRepository
@@ -46,5 +48,12 @@ public interface CarService {
      */
     NetMessage publishComments(CarComment comment);
 
+    /**
+     * 添加汽车品牌信息
+     * @param carBrand
+     * @param file 品牌标志图片
+     * @return
+     */
+    NetMessage saveBrand(CarBrand carBrand, MultipartFile file);
 
 }

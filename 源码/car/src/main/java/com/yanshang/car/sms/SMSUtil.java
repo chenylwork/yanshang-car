@@ -191,18 +191,21 @@ public class SMSUtil {
 
     private final static String SERVER_URL = "https://www.020ymkj.com/sendSms/";
     private final static String SEND_URL = "https://www.020ymkj.com/sendSms/sendMessage";
+//    appId:HEBEICHUANGGEE5XEQFLF1NW7W0YE1J2
+//    appKey:OP9UGHZWRC3L72H7O3MHRVRA7RL0PIP6
+//    appSecret:eSjnSzZJNltJzKjphVhowg==
     /**
      * 身份标识id
      */
-    private final static String appid = "AGENT_USER";
+    private final static String appid = "HEBEICHUANGGEE5XEQFLF1NW7W0YE1J2";
     /**
      * 身份标识Key
      */
-    private final static String appKey = "94QUJ2KTSW65GVGC5KBXIWQ3212399Q";
+    private final static String appKey = "OP9UGHZWRC3L72H7O3MHRVRA7RL0PIP6";
     /**
      * 接口密钥 appSecret
      */
-    private final static String appSecrect = "qM2XlpT4cIpAWCTQSm4cNQ==";
+    private final static String appSecrect = "eSjnSzZJNltJzKjphVhowg==";
     /**
      * 接口协议版本 此接口规范固定为101
      */

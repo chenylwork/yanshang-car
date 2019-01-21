@@ -5,6 +5,7 @@ import com.yanshang.car.bean.Car;
 import com.yanshang.car.bean.CarBrand;
 import com.yanshang.car.bean.CarComment;
 import com.yanshang.car.commons.CharacterUtil;
+import com.yanshang.car.commons.FileUtil;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.repositories.AccountRepository;
 import com.yanshang.car.repositories.CarBrandRepository;
@@ -12,13 +13,18 @@ import com.yanshang.car.repositories.CarCommentRepository;
 import com.yanshang.car.repositories.CarRepository;
 import com.yanshang.car.services.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +38,7 @@ import java.util.Optional;
  **/
 @Service("carService")
 public class CarServiceImpl implements CarService {
+
     @Autowired
     private CarBrandRepository carBrandRepository;
     @Autowired
@@ -112,4 +119,35 @@ public class CarServiceImpl implements CarService {
         carCommentRepository.save(comment);
         return NetMessage.successNetMessage("","发表成功！！");
     }
+
+    @Override
+    @Transactional
+    public NetMessage saveBrand(CarBrand carBrand, MultipartFile file) {
+        if (file == null || file.isEmpty()) return NetMessage.failNetMessage("","需要品牌标志图片！！！");
+        if (carBrand == null) return NetMessage.failNetMessage("","无信息！！");
+        String name = carBrand.getName();
+        if (name == null || "".equals(name)) return NetMessage.failNetMessage("","请录入品牌名称！！");
+        CarBrand oldCarBrand = carBrandRepository.getByName(name);
+        if (carBrand.getBrandid() == null) {
+            if (oldCarBrand != null && oldCarBrand.getBrandid() != null) return NetMessage.failNetMessage("","该品牌已存在！！");
+        }
+        if (file.getOriginalFilename().lastIndexOf(".") == -1);
+        String originalFilename = file.getOriginalFilename();
+        int i = originalFilename.lastIndexOf(".");
+        String suffix = (i == -1) ? "" : originalFilename.substring(i);
+        String fileName = name+suffix;
+        try {
+            file.transferTo(FileUtil.createFile(IMG_PATH+img_parent_path+"/"+fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return NetMessage.failNetMessage("","保存失败,品牌图片保存失败！！");
+        }
+        carBrand.setImages(img_parent_path+"/"+fileName);
+        carBrandRepository.save(carBrand);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Value("${basic.project.img.home}")
+    private String IMG_PATH;
+    private String img_parent_path = "/car/brands";
 }
