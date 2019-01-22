@@ -30,8 +30,12 @@ public class FileUtil {
 
     /**
      * 判断两个文件是否相同
-     * @param file1
-     * @param file2
+     * 1.判断两者是否为空的情况
+     * 2.判断两者的长度是否相等
+     * 3.判断两者的文件后缀是否相等
+     * 4.随机收取文件内容段判断是否相等——》 待实现
+     * @param file1 需要对比的文件1
+     * @param file2 需要对比的文件2
      * @return
      */
     public static boolean fileEqual(File file1,File file2) {
@@ -44,26 +48,33 @@ public class FileUtil {
         String suffix1 = ((a = name1.indexOf(".")) == -1) ? "" : name1.substring(a,name1.length());
         String suffix2 = ((b = name2.indexOf(".")) == -1) ? "" : name2.substring(b,name2.length());
         if (!suffix1.equals(suffix2)) return false;
-
-        byte[] buffer1 = new byte[64];
-        byte[] buffer2 = new byte[64];
-        int stat = 0,end = 0;
-        Random random = new Random();
-        try {
-            FileInputStream fileInputStream1 = new FileInputStream(file1);
-            FileInputStream fileInputStream2 = new FileInputStream(file2);
-            file1.length();
-            for (int i=0; i<3; i++) {
-                fileInputStream1.read(buffer1,stat,end);
-                fileInputStream2.read(buffer2,stat,end);
-                if (!Arrays.equals(buffer1,buffer2)) return false;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        /*待实现*/
+//        byte[] buffer1 = new byte[64];
+//        byte[] buffer2 = new byte[64];
+//        int stat = 0,end = 0;
+//        long length = file1.length();
+//        Random random = new Random(file1.length());
+//        try {
+//            FileInputStream fileInputStream1 = new FileInputStream(file1);
+//            FileInputStream fileInputStream2 = new FileInputStream(file2);
+//            file1.length();
+//            for (int i=0; i<3; i++) {
+//                while(true) {
+//                    long start = random.nextLong();
+////                    if (start >= (length - CHECK_FILE_BUFFER_LENGTH)) end = length;
+//                    break;
+//                }
+//                fileInputStream1.read(buffer1,stat,end);
+//                fileInputStream2.read(buffer2,stat,end);
+//                if (!Arrays.equals(buffer1,buffer2)) return false;
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        /*待实现*/
         return true;
     }
+    private static final int CHECK_FILE_BUFFER_LENGTH = 64;
 
 
 }

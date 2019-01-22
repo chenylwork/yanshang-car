@@ -1,5 +1,7 @@
 package com.yanshang.car;
 
+import com.yanshang.car.commons.BaseDao;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,7 +17,7 @@ import java.util.regex.Pattern;
  **/
 public class MainTest {
 
-    public static void main(String[] a) {
+    public static void main(String[] args) {
 //        String str = "你是不是傻"; // 需要检测的字符串
 //        String pattern  = ".*不.*"; // 正则字符串
 //
@@ -39,5 +41,12 @@ public class MainTest {
 //            }
 //
 //        }
+        boolean database = BaseDao.createDatabase("car", "localhost", "root", "root");
+        System.out.println(database);
+
+    }
+    public static void check(Integer a,Integer b) {
+        a = 100;
+        b = 200;
     }
 }
