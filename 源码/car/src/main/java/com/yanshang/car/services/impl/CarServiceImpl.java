@@ -1,5 +1,7 @@
 package com.yanshang.car.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yanshang.car.bean.Account;
 import com.yanshang.car.bean.Car;
 import com.yanshang.car.bean.CarBrand;
@@ -7,6 +9,8 @@ import com.yanshang.car.bean.CarComment;
 import com.yanshang.car.commons.CharacterUtil;
 import com.yanshang.car.commons.FileUtil;
 import com.yanshang.car.commons.NetMessage;
+import com.yanshang.car.commons.ObjectUtils;
+import com.yanshang.car.dao.MongodbDao;
 import com.yanshang.car.repositories.AccountRepository;
 import com.yanshang.car.repositories.CarBrandRepository;
 import com.yanshang.car.repositories.CarCommentRepository;
@@ -26,6 +30,7 @@ import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,7 +52,8 @@ public class CarServiceImpl implements CarService {
     private CarRepository carRepository;
     @Autowired
     private AccountRepository accountRepository;
-
+    @Autowired
+    private MongodbDao mongodbDao;
     @Override
     public NetMessage getAllCarBrand() {
         List<CarBrand> all = carBrandRepository.findAll();
@@ -63,13 +69,14 @@ public class CarServiceImpl implements CarService {
                                          CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
                 // 品牌拼接
-                if (CharacterUtil.isEmpty(brand)) {
+                if (!CharacterUtil.isEmpty(brand)) {
                     predicates.add(criteriaBuilder.equal(root.get("brand").as(String.class), brand));
                 }
                 // 标签拼接
-                CriteriaBuilder.In<Object> labels = criteriaBuilder.in(root.get("label"));
-                labels.value(CarRepository.LABEL_RECOMMEND);
-                predicates.add(labels);
+                predicates.add(criteriaBuilder.like(root.get("label").as(String.class),"%"+CarRepository.LABEL_RECOMMEND+"%"));
+//                CriteriaBuilder.In<Object> labels = criteriaBuilder.in(root.get("label"));
+//                labels.value(CarRepository.LABEL_RECOMMEND);
+//                predicates.add(labels);
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         });
@@ -78,10 +85,38 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    public NetMessage saveInfo(Car car) {
+        carRepository.save(car);
+        return NetMessage.successNetMessage("","保存成功");
+    }
+
+    @Override
+    public NetMessage saveDetails(HashMap<String, Object> map) {
+        return null;
+    }
+
+    @Override
+    public NetMessage getInfo(String identity) {
+        if (CharacterUtil.isEmpty(identity)) identity = "0";
+        Optional<Car> byId = carRepository.findById(Integer.parseInt(identity));
+        if(byId != null && byId.isPresent()) {
+            return NetMessage.successNetMessage("",byId.get());
+        }
+        return NetMessage.failNetMessage("","没有您需要的汽车信息！！");
+    }
+
+    @Override
     public NetMessage getDetails(String identity) {
         if (CharacterUtil.isEmpty(identity)) identity = "0";
         Optional<Car> byId = carRepository.findById(Integer.parseInt(identity));
         if(byId != null && byId.isPresent()) {
+            Car car = byId.get();
+            try {
+                HashMap<String, Object> carMap = ObjectUtils.object2Map(car);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             return NetMessage.successNetMessage("",byId.get());
         }
         return NetMessage.failNetMessage("","没有您需要的汽车信息！！");

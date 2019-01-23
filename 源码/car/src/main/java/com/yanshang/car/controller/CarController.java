@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /*
  * @ClassName CarRepository
  * @Description 作用描述
@@ -45,9 +48,39 @@ public class CarController {
         return carService.getRecommend(brand);
     }
 
+    /**
+     * 保存汽车基本信息
+     * @param map
+     * @return
+     */
+    @RequestMapping("/save/info")
+    public NetMessage saveInfo(HashMap<String,Object> map) {
+        System.out.println(map);
+        return NetMessage.errorNetMessage();
+    }
 
     /**
-     * 根据汽车标识获取汽车详细信息
+     * 保存汽车详细配置信息
+     * @param map
+     * @return
+     */
+    @RequestMapping("/save/details")
+    public NetMessage saveDetails(HashMap<String,Object> map) {
+        System.out.println(map);
+        return NetMessage.errorNetMessage();
+    }
+    /**
+     * 根据汽车标识获取汽车基本信息
+     * @param identity 汽车标识
+     * @return
+     */
+    @RequestMapping("/info")
+    public NetMessage info(String identity) {
+        return carService.getInfo(identity);
+    }
+
+    /**
+     * 获取汽车详细配置信息
      * @param identity 汽车标识
      * @return
      */
@@ -55,6 +88,7 @@ public class CarController {
     public NetMessage details(String identity) {
         return carService.getDetails(identity);
     }
+
 
     /**
      * 获取全部汽车品牌

@@ -24,9 +24,10 @@ public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer carid; // 汽车编号
-    private String name; // 汽车名称：2018款帝豪GS
+    private String name; // 汽车名称：2018款帝豪GSE
     private String brand; // 汽车品牌：吉利汽车
-    private String series; // 汽车系列：帝豪GSE
+    private String series; // 汽车系列：帝豪
+    private String model; // 汽车型号：帝豪GSE
     private String deploy; // 汽车配置：标配、高配。{配置编号:配置名称,配置编号:配置名称}
     private String colors; // 汽车颜色
     private String images; // 汽车图片。汽车编号+[汽车颜色]

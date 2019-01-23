@@ -1,9 +1,12 @@
 package com.yanshang.car.services;
 
+import com.yanshang.car.bean.Car;
 import com.yanshang.car.bean.CarBrand;
 import com.yanshang.car.bean.CarComment;
 import com.yanshang.car.commons.NetMessage;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
 
 /*
  * @ClassName CarRepository
@@ -28,7 +31,26 @@ public interface CarService {
     NetMessage getRecommend(String brand);
 
     /**
-     * 根据汽车标识获取汽车详细信息
+     * 保存汽车基本信息
+     * @param car
+     * @return
+     */
+    NetMessage saveInfo(Car car);
+
+    /**
+     * 保存汽车详细配置信息
+     * @param map
+     * @return
+     */
+    NetMessage saveDetails(HashMap<String,Object> map);
+    /**
+     * 获取汽车基本信息
+     * @param identity 汽车标识
+     * @return
+     */
+    NetMessage getInfo(String identity);
+    /**
+     * 根据汽车标识获取汽车详细配置信息
      * @param identity
      * @return
      */

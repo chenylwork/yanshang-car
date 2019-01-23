@@ -1,3 +1,4 @@
 .idea
 *\target
 *.iml
+LOG_HOME_IS_UNDEFINED

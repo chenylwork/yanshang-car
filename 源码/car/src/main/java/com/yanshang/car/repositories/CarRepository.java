@@ -20,6 +20,6 @@ public interface CarRepository extends JpaRepositoryImplementation<Car,Integer>{
     /**
      * 主打车标签
      */
-    String LABEL_RECOMMEND = "";
+    String LABEL_RECOMMEND = "0201";
 
 }
