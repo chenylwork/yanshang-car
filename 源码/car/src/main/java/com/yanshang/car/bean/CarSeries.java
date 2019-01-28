@@ -15,7 +15,7 @@ import javax.persistence.*;
  **/
 @Data
 @Entity
-@Table(name="t_car_comment")
+@Table(name="t_car_series")
 @AllArgsConstructor
 @NoArgsConstructor
 public class CarSeries {

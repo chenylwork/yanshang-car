@@ -1,6 +1,7 @@
 package com.yanshang.car.commons;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -44,6 +45,21 @@ public class ObjectUtils {
             return objectMapper.readValue(string, HashMap.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * json字符串转换为map对象
+     * @param data
+     * @return
+     */
+    public static HashMap<String,Object> string2Map(String data) {
+        if (data == null) return null;
+        try {
+            return objectMapper.readValue(data,HashMap.class);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -17,6 +17,8 @@ import java.util.HashMap;
  **/
 public interface CarService {
 
+    String MONGODB_CAR_COLLECTION_NAME = "car";
+
     /**
      * 获取全部汽车品牌
      * @return
@@ -32,17 +34,27 @@ public interface CarService {
 
     /**
      * 保存汽车基本信息
-     * @param car
+     * @param data 录入汽车信息
      * @return
      */
-    NetMessage saveInfo(Car car);
+    NetMessage saveInfo(String data);
 
     /**
-     * 保存汽车详细配置信息
-     * @param map
+     * 评论汽车
+     * @param carComment
      * @return
      */
-    NetMessage saveDetails(HashMap<String,Object> map);
+    NetMessage publishComments(CarComment carComment);
+
+    /**
+     * 分页获取汽车评论信息
+     * @param carid 汽车编号
+     * @param start 开始记录
+     * @param end 结束记录
+     * @return
+     */
+    NetMessage getComments(String carid,int start,int end);
+
     /**
      * 获取汽车基本信息
      * @param identity 汽车标识
@@ -55,20 +67,6 @@ public interface CarService {
      * @return
      */
     NetMessage getDetails(String identity);
-
-    /**
-     * 根据汽车编号，获取该汽车的评论
-     * @param identity
-     * @return
-     */
-    NetMessage getComments(String identity);
-
-    /**
-     * 对汽车进行评论
-     * @param comment
-     * @return
-     */
-    NetMessage publishComments(CarComment comment);
 
     /**
      * 添加汽车品牌信息

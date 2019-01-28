@@ -19,7 +19,6 @@ import javax.persistence.*;
 @Table(name="t_car")
 @AllArgsConstructor
 @NoArgsConstructor
-//@Proxy(lazy = false)
 public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

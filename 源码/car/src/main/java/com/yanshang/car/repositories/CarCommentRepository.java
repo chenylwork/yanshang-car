@@ -2,6 +2,7 @@ package com.yanshang.car.repositories;
 
 import com.yanshang.car.bean.CarComment;
 import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,12 +13,6 @@ import java.util.List;
  * @Date 2019/1/17- 13:58
  * @Version 1.0
  **/
+@Repository
 public interface CarCommentRepository extends JpaRepositoryImplementation<CarComment,Integer> {
-
-    /**
-     * 根据汽车标识获取，对应的评论
-     * @param object 汽车标识
-     * @return
-     */
-    List<CarComment> getByObject(String object);
 }

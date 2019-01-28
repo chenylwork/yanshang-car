@@ -2,6 +2,8 @@ package com.yanshang.car.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,5 +32,10 @@ public class MongodbDao {
     }
     public List<HashMap> get(String collectionName) {
         return mongoTemplate.findAll(HashMap.class, collectionName);
+    }
+
+    public <T> T get(int id,Class<T> classEntity,String collectionName) {
+        Query query = new Query(Criteria.where("_id").is(id));
+        return mongoTemplate.findOne(query,classEntity,collectionName);
     }
 }

@@ -22,4 +22,11 @@ public interface CarRepository extends JpaRepositoryImplementation<Car,Integer>{
      */
     String LABEL_RECOMMEND = "0201";
 
+    /**
+     * 根据汽车名称获取汽车信息
+     * @param name
+     * @return
+     */
+    Car getByName(String name);
+
 }

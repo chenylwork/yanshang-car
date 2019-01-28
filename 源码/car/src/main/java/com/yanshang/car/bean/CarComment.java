@@ -22,9 +22,9 @@ public class CarComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer commentid; // 评论编号
+    private String carid; // 评论汽车
+    private String observer; // 评论人
     private String title; // 评论标题
     private String content; // 评论内容
-    private String observer; // 评论人
     private String time; // 评论时间
-    private String object; // 评论对象：汽车标识（id）
 }

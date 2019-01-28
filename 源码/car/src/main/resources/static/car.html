@@ -3,20 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <title>zhuye</title>
-
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
-    <script  src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/jquery-1.9.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <style>
+        .head {
+            background-color: #0D8BBD !important;
+            color: white;
+        }
+        .body {
+            background: #0D8BBD;
+            color: white;
+        }
+        td{contenteditable:true;}
+    </style>
+    <script>
+        function tab() {
+            $("")
+        }
+    </script>
 </head>
 <body>
-    <button>添加一行</button>
-    <button>添加一列</button>
-    <button>添加一标题</button>
-    <table class="table table-bordered">
-        <tr><td>1</td><td>2</td><td>3</td></tr>
-        <tr><td>1</td><td>2</td><td>3</td></tr>
-        <tr><td>1</td><td>2</td><td>3</td></tr>
-        <tr><td>1</td><td>2</td><td>3</td></tr>
+<button id="add_row_btn" data-size="1" contenteditable="true" onclick="add_tab()">添加一栏</button>
+<div class='table_box_1 container'>
+    <button class='add_row_btn' data-id='1' onclick='add_row(1)'>添加一行</button>
+    <button class='add_cell_btn' data-id='1' onclick='add_cell(1)'>添加一列</button>
+    <table id='table' contenteditable="true" class='table table-bordered table-striped' data-row='0' data-cell='0'>
+        <thead>
+        <tr class='' id="table_head">
+        </tr>
+        </thead>
+        <tbody>
+        <!--<tr class='head'>-->
+        <!--<td>标题11</td>-->
+        <!--<td>标题12</td>-->
+        <!--<td>标题13</td>-->
+        <!--</tr>-->
+        </tbody>
     </table>
+</div>
+</body>
+
+<script>
+
+    var table = document.getElementById("table");
+    var deploys = 0;
+    var name_cell_span_default = 1;
+    var name_cell_span_max = name_cell_span_default;
+    var name_cell_span_now = name_cell_span_default;
+
+    $(function () {
+        console.log("获取文件");
+        // $.get("http://localhost/car/car/details?identity=4",function(data){
+        $.get("http://localhost/car/car/details?identity=6",function(data){
+            data = data.content;
+            console.log(data);
+            var basic = data.basic;
+            var html = "";
+            // 初始化头部信息
+            var heads = basic.deploy.split(",");
+            // deploys = Object.getOwnPropertyNames(heads).length;
+            deploys = heads.length;
+            console.info(heads);
+            html += "<th id='basic_name'>" + basic.name + "详细信息</th>";
+            cellsAddOne();
+            for (i in heads) {
+                html += "<th data-index='" + i + "'>" + heads[i] + "</th>";
+                console.log(i);
+                cellsAddOne();
+            }
+            $("#table_head").append(html);
+            rowsAddOne();
+            // 初始化配置详细信息
+
+            for(i in data) {
+                if(i != "basic") {
+                    // 添加配置头
+                    add_head(i);
+                    init_tab(data[i]);
+                }
+            }
+            // 重新定义头部名称td大小
+            document.getElementById("basic_name").colSpan = name_cell_span_now;
+            // 重新分配模块标题大小
+            var heads = document.getElementsByClassName("head");
+            for(var head in heads) {
+                heads[head].colSpan = heads[head].colSpan +  (name_cell_span_now -1);
+            }
+            // 重新设置属性大小
+            var trs = document.getElementsByTagName("tr");
+            var cellSpan = deploys + name_cell_span_now;
+            for(var i in trs) {
+                if(typeof trs[i] == "object") {
+                    var tds = trs[i].cells;
+                    var span = 0;
+                    for(var j in tds) {
+                        if(!isNaN(tds[j].colSpan)) {
+                            span = tds[j].colSpan + span;
+                        }
+                    }
+                    var classNames = tds[0].className;
+                    var classList = classNames.split(" ");
+                    for(var className in classList) {
+                        if(classList[className]== "failed_one") {
+                            trs[i].cells[0].colSpan = trs[i].cells[0].colSpan + (cellSpan - span);
+                        }
+                    }
+                }
+            }
+        });
+        $("#table td").bind("select",function(){
+            console.log("绑定 选中事件");
+            $(this).css("backgroundColor","red");
+        });
+    });
+
+
+    function init_tab(data,name_td) {
+        for(var i in data) {
+            var new_tr = table.insertRow();
+            var new_td = new_tr.insertCell();
+            new_td.innerText = i;
+            new_td.className = "failed_one " + new_td.className;
+            init_tr(data[i],new_tr,new_td);
+            if(name_cell_span_max > name_cell_span_now) {
+                name_cell_span_now = name_cell_span_max;
+            }
+            name_cell_span_max = name_cell_span_default;
+        }
+    }
+
+    /**
+     * 初始化详细信息表
+     * 00000000000
+     * {
+        "三模动能":{"1":"Y","2":"Y","3":"Y","4":"Y"},
+        "换挡系统电子防盗":{"1":"Y","2":"Y","3":"Y","4":"Y"},
+        "三模动能":{"1":"Y","2":"Y","3":"Y","4":"Y"},
+        "泊车辅助":[
+            {"倒车雷达":{"1":"Y","2":"Y","3":"Y","4":"Y"}},
+            {"可视倒车影像":{"1":"Y","2":"Y","3":"Y","4":"Y"}},
+            {"动态辅助线":{"1":"Y","2":"Y","3":"Y","4":"Y"}}
+        ]
+      }
+     00000000000
+     **/
+    function init_tr(data,tr,td) {
+        if (typeof data == "object") {
+            if (data instanceof Array) {
+                var arrayLength = data.length;
+                // for(var i in data) {
+                //     var new_td = tr.insertCell();
+                //     new_td.innerText = data[i];
+                //     // init_tr(data[i],tr,);
+                // }
+                // var array = data[i];
+                // new_td.rowSpan = array.length;
+                for(failed in data) {
+                    new_td = tr.insertCell();
+                    new_td.innerText = data[failed];
+                    new_td.style.textAlign = "center";
+                }
+            }else {
+                td.rowSpan = Object.getOwnPropertyNames(data).length;
+                var failedIndex = 0;
+                name_cell_span_max++;
+                for(failed in data) {
+                    if (failedIndex > 0) {
+                        tr = table.insertRow();
+                    }
+                    new_td = tr.insertCell();
+                    new_td.innerText = failed;
+                    new_td.style.textAlign = "center";
+                    init_tr(data[failed],tr,new_td);
+                    failedIndex++;
+                }
+            }
+
+        } else {
+            new_td = tr.insertCell();
+            new_td.innerText = data;
+            new_td.colSpan = deploys;
+            new_td.style.textAlign = "center";
+        }
+    }
+
+
+    function rowsAddOne() {
+        var rows = table.dataset.row;
+        rows = (rows == null || rows == "") ? 0 : parseInt(rows);
+        table.dataset.row = (rows + 1);
+    }
+
+    function cellsAddOne() {
+        var cells = table.dataset.cell;
+        cells = (cells == null || cells == "") ? 0 : parseInt(cells);
+        table.dataset.cell = (cells + 1);
+    }
+
+    function initTop(data) {
+        var heads = data.deploy;
+        var name = data.name;
+        var html = "<th>" + name + "详细信息</th>";
+        html += "";
+        for (i in heads) {
+            html += "<th data-index='" + heads[i] + "'>" + i + "</th>";
+            // cellsAddOne();
+        }
+        $("#table_head").append(html);
+    }
+
+    /**
+     * 增加一行
+     */
+    function add_row(index) {
+        var tr_length = document.getElementById("table").rows.length;
+        var td_length = document.getElementById("table").rows[0].cells.length;
+        var new_tr = table.insertRow();
+        for (var i = 0; i < td_length; i++) {
+            var new_td = new_tr.insertCell();
+            new_td.innerHTML = "</br>";
+        }
+    }
+
+    /*
+     * 增加一行标题
+     **/
+    function add_head(name) {
+        var table = document.getElementById("table");
+        var tr_length = table.rows.length;
+        var td_length = table.rows.item(0).cells.length;
+        var new_tr = table.insertRow();
+        var new_td = new_tr.insertCell();
+        new_td.innerHTML = name;
+        new_td.colSpan = td_length;
+        new_td.className = "head";
+        // addClassName(new_td,"head");
+    }
+
+    /**
+     * 增加一列
+     */
+    function add_cell(index) {
+        var tr_length = table.rows.length;
+        var td_length = table.rows.item(0).cells.length;
+        var trs = table.rows;
+        for (var i = 0; i < tr_length; i++) {
+            var new_td = table.rows[i].insertCell();
+            new_td.innerHTML = "</br>";
+        }
+    }
+</script>
+
 </body>
 </html>

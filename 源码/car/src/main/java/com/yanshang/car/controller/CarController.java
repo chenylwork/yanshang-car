@@ -49,26 +49,15 @@ public class CarController {
     }
 
     /**
-     * 保存汽车基本信息
-     * @param map
+     * 保存汽车信息
+     * @param data
      * @return
      */
     @RequestMapping("/save/info")
-    public NetMessage saveInfo(HashMap<String,Object> map) {
-        System.out.println(map);
-        return NetMessage.errorNetMessage();
+    public NetMessage saveInfo(String data) {
+        return carService.saveInfo(data);
     }
 
-    /**
-     * 保存汽车详细配置信息
-     * @param map
-     * @return
-     */
-    @RequestMapping("/save/details")
-    public NetMessage saveDetails(HashMap<String,Object> map) {
-        System.out.println(map);
-        return NetMessage.errorNetMessage();
-    }
     /**
      * 根据汽车标识获取汽车基本信息
      * @param identity 汽车标识
@@ -121,12 +110,12 @@ public class CarController {
 
     /**
      * 获取某汽车的评论信息
-     * @param identity
+     * @param carid
      * @return
      */
     @RequestMapping("/comments")
-    public NetMessage comments(String identity) {
-        return carService.getComments(identity);
+    public NetMessage comments(String carid,int start,int end) {
+        return carService.getComments(carid,start,end);
     }
 
     /**
