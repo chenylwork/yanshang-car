@@ -1,7 +1,10 @@
 package com.yanshang.car.controller;
 
+import com.yanshang.car.bean.Employee;
 import com.yanshang.car.bean.Reserve;
 import com.yanshang.car.commons.NetMessage;
+import com.yanshang.car.services.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,9 +23,13 @@ public class EmployeeController {
      * 获取所有业务员
      * @return
      */
-    @RequestMapping("/salesmen")
-    public NetMessage salesmen() {
-        return null;
+    @RequestMapping("/salesmen/get")
+    public NetMessage salesmen(Employee employee) {
+        return employeeService.getSalesmen(employee);
+    }
+    @RequestMapping("/salesmen/save")
+    public NetMessage salesman(Employee employee) {
+        return employeeService.saveSalesmen(employee);
     }
 
     /**
@@ -34,6 +41,9 @@ public class EmployeeController {
     public NetMessage reserve(Reserve reserve) {
         return null;
     }
+
+    @Autowired
+    private EmployeeService employeeService;
 
 
 }

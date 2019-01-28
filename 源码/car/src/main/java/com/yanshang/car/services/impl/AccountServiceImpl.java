@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.Optional;
 
 /*
  * @ClassName AccountServiceImpl
@@ -106,5 +107,13 @@ public class AccountServiceImpl implements AccountService {
             return NetMessage.errorNetMessage();
         }
         return NetMessage.successNetMessage("","密码修改成功！！");
+    }
+
+    @Override
+    public NetMessage getUser(String userid) {
+        if (userid == null || "".equals(userid)) return NetMessage.failNetMessage("","缺少用户编号！！");
+        Optional<Account> byId = accountRepository.findById(Integer.parseInt(userid));
+        if (!byId.isPresent()) return NetMessage.failNetMessage("","暂无该用户");
+        return NetMessage.successNetMessage("",byId.get());
     }
 }

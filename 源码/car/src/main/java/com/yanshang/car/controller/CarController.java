@@ -3,16 +3,11 @@ package com.yanshang.car.controller;
 import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.CarService;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /*
  * @ClassName CarRepository
@@ -127,6 +122,45 @@ public class CarController {
     public NetMessage publishComments(CarComment comment) {
         return carService.publishComments(comment);
     }
+
+    /**
+     * 汽车加入购物车
+     * @param carCart
+     * @return
+     */
+    @RequestMapping("/cart/save")
+    public NetMessage shoppingCar(CarCart carCart) {
+        return carService.saveCarCart(carCart);
+    }
+
+    /**
+     * 根据用户编号获取购物车信息
+     * @param userid
+     * @return
+     */
+    @RequestMapping("/cart/get")
+    public NetMessage getCarts(String userid) {
+        return carService.getCarCart(userid);
+    }
+
+    /**
+     * 保存汽车价钱信息
+     * @param data
+     * @return
+     */
+    @RequestMapping("/price/save")
+    public NetMessage savePrice(String data) {
+        return carService.saveCarPrice(data);
+    }
+    /**
+     * 获取汽车价钱信息
+     * @param carid
+     * @return
+     */
+    @RequestMapping("/price/get")
+    public NetMessage getPrice(String carid) {
+        return carService.getCarPrice(carid);
+    }
     /**
      * 根据汽车唯一标识获取该汽车的贷款信息
      * @param identity 汽车唯一标识
@@ -168,13 +202,13 @@ public class CarController {
     }
 
     /**
-     * 根据标识获取租车信息
-     * @param identity
+     * 获取租车信息
+     * @param order
      * @return
      */
     @RequestMapping("/rent")
-    public NetMessage rent(String identity) {
-        return null;
+    public NetMessage rent(RentOrder order) {
+        return carService.getRentOrder(order);
     }
 
     /**
@@ -184,27 +218,17 @@ public class CarController {
      */
     @RequestMapping("/order/rent/save")
     public NetMessage saveRentOrder(RentOrder order) {
-        return null;
+        return carService.addRentOrder(order);
     }
 
     /**
-     * 获取所有的试驾车
-     * @param identity
-     * @return
-     */
-    @RequestMapping("/tests")
-    public NetMessage tests(String identity) {
-        return null;
-    }
-
-    /**
-     * 根据唯一标识获取试驾车信息
-     * @param identity
+     * 获取时间信息
+     * @param order
      * @return
      */
     @RequestMapping("/test")
-    public NetMessage test(String identity) {
-        return null;
+    public NetMessage test(TestOrder order) {
+        return carService.getTestOrders(order);
     }
 
     /**
@@ -214,7 +238,7 @@ public class CarController {
      */
     @RequestMapping("/order/test/save")
     public NetMessage saveTestOrder(TestOrder order) {
-        return null;
+        return carService.saveTestOrder(order);
     }
 
     /******************************************************************/

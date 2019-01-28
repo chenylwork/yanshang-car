@@ -34,6 +34,7 @@ public class MongodbDao {
         return mongoTemplate.findAll(HashMap.class, collectionName);
     }
 
+
     public <T> T get(int id,Class<T> classEntity,String collectionName) {
         Query query = new Query(Criteria.where("_id").is(id));
         return mongoTemplate.findOne(query,classEntity,collectionName);

@@ -8,22 +8,22 @@ import javax.persistence.*;
 
 /*
  * @ClassName ShoppingCar
- * @Description 作用描述
+ * @Description 汽车购物车实体
  * @Author 陈彦磊
  * @Date 2019/1/16- 17:05
  * @Version 1.0
  **/
 @Data
 @Entity
-@Table(name="t_shoppingcar")
+@Table(name="t_car_cart")
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShoppingCar {
+public class CarCart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer shoppingid; // 编号
-    private String commodityid; // 商品编号
+    private Integer cartid; // 编号
+    private String carid; // 汽车编号
     private int size; // 商品个数
-    private String accountid; // 用户编号
-
+    private String userid; // 用户编号
+    private String time; // 加入时间
 }

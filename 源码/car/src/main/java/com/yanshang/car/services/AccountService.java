@@ -59,4 +59,11 @@ public interface AccountService {
      * @return
      */
     NetMessage changePass(String phone,String password);
+
+    /**
+     * 根据用户编号获取用户信息
+     * @param userid
+     * @return
+     */
+    NetMessage getUser(String userid);
 }

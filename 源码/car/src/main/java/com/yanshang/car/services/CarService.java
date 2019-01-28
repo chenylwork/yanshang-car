@@ -1,8 +1,6 @@
 package com.yanshang.car.services;
 
-import com.yanshang.car.bean.Car;
-import com.yanshang.car.bean.CarBrand;
-import com.yanshang.car.bean.CarComment;
+import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +16,7 @@ import java.util.HashMap;
 public interface CarService {
 
     String MONGODB_CAR_COLLECTION_NAME = "car";
-
+    String MONGODB_CAR_PRICE_COLLECTION_NAME = "car_price";
     /**
      * 获取全部汽车品牌
      * @return
@@ -76,4 +74,58 @@ public interface CarService {
      */
     NetMessage saveBrand(CarBrand carBrand, MultipartFile file);
 
+    /**
+     * 汽车购物车，加入商品
+     * @param carCart
+     * @return
+     */
+    NetMessage saveCarCart(CarCart carCart);
+
+    /**
+     * 根据用户编号获取购物车信息
+     * @param userid
+     * @return
+     */
+    NetMessage getCarCart(String userid);
+
+    /**
+     * 录入汽车价钱信息
+     * @param data json数据
+     * @return
+     */
+    NetMessage saveCarPrice(String data);
+
+    /**
+     * 获取汽车价钱信息
+     * @param carid 汽车编号
+     * @return
+     */
+    NetMessage getCarPrice(String carid);
+
+    /**
+     * 添加租车订单
+     * @param rentOrder
+     * @return
+     */
+    NetMessage addRentOrder(RentOrder rentOrder);
+
+    /**
+     * 获取租车订单
+     * @param rentOrder
+     * @return
+     */
+    NetMessage getRentOrder(RentOrder rentOrder);
+
+    /**
+     * 添加汽车订单
+     * @param testOrder
+     * @return
+     */
+    NetMessage saveTestOrder(TestOrder testOrder);
+
+    /**
+     * 获取汽车订单信息
+     * @return
+     */
+    NetMessage getTestOrders(TestOrder testOrder);
 }

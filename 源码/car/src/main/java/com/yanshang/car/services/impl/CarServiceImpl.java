@@ -3,25 +3,25 @@ package com.yanshang.car.services.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yanshang.car.bean.Account;
-import com.yanshang.car.bean.Car;
-import com.yanshang.car.bean.CarBrand;
-import com.yanshang.car.bean.CarComment;
+import com.mongodb.client.result.UpdateResult;
+import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.CharacterUtil;
 import com.yanshang.car.commons.FileUtil;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.commons.ObjectUtils;
 import com.yanshang.car.dao.MongodbDao;
-import com.yanshang.car.repositories.AccountRepository;
-import com.yanshang.car.repositories.CarBrandRepository;
-import com.yanshang.car.repositories.CarCommentRepository;
-import com.yanshang.car.repositories.CarRepository;
+import com.yanshang.car.repositories.*;
+import com.yanshang.car.services.AccountService;
 import com.yanshang.car.services.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.querydsl.QPageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,10 +34,7 @@ import javax.transaction.Transactional;
 import java.io.DataInput;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /*
  * @ClassName CarServiceImpl
@@ -49,16 +46,7 @@ import java.util.Optional;
 @Service("carService")
 public class CarServiceImpl implements CarService {
 
-    @Autowired
-    private CarBrandRepository carBrandRepository;
-    @Autowired
-    private CarCommentRepository carCommentRepository;
-    @Autowired
-    private CarRepository carRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private MongodbDao mongodbDao;
+
     @Override
     public NetMessage getAllCarBrand() {
         List<CarBrand> all = carBrandRepository.findAll();
@@ -101,7 +89,7 @@ public class CarServiceImpl implements CarService {
                 car = carRepository.save(car);
                 hashMap.put("basic", car);
                 hashMap.put("_id",car.getCarid());
-                mongodbDao.save(hashMap, MONGODB_CAR_COLLECTION_NAME);
+                mongoTemplate.save(hashMap,MONGODB_CAR_COLLECTION_NAME);
             } else {
                 return NetMessage.failNetMessage("","该汽车信息已存在！！");
             }
@@ -126,9 +114,9 @@ public class CarServiceImpl implements CarService {
 
         String accountID = comment.getObserver();
         if (CharacterUtil.isEmpty(accountID)) return NetMessage.failNetMessage("","缺少评论人！！");
-        Optional<Account> accountOptional = accountRepository.findById(Integer.parseInt(accountID));
-        if (accountOptional == null || !accountOptional.isPresent())return NetMessage.failNetMessage("","评论人不存在！！");
 
+        NetMessage netMessage = accountService.getUser(accountID);
+        if (netMessage.getStatus() == NetMessage.FAIl) return netMessage;
 
         comment.setTime(CharacterUtil.dataTime());
         carCommentRepository.save(comment);
@@ -159,13 +147,14 @@ public class CarServiceImpl implements CarService {
         if(byId != null && byId.isPresent()) {
             return NetMessage.successNetMessage("",byId.get());
         }
-        return NetMessage.failNetMessage("","没有您需要的汽车信息！！");
+        return NetMessage.failNetMessage("","暂无该款汽车！！");
     }
 
     @Override
     public NetMessage getDetails(String identity) {
         if (CharacterUtil.isEmpty(identity)) identity = "0";
-        Object o = mongodbDao.get(Integer.parseInt(identity), Object.class, MONGODB_CAR_COLLECTION_NAME);
+        Query query = new Query(Criteria.where("_id").is(identity));
+        Object o = mongoTemplate.findOne(query,Object.class,MONGODB_CAR_COLLECTION_NAME);
         if(o != null) {
             return NetMessage.successNetMessage("",o);
         }
@@ -201,7 +190,121 @@ public class CarServiceImpl implements CarService {
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
+    @Override
+    public NetMessage saveCarCart(CarCart carCart) {
+        String userid = carCart.getUserid();
+        NetMessage netMessage = accountService.getUser(userid);
+        if (netMessage.getStatus() == NetMessage.FAIl) return netMessage;
+
+        Optional<Car> carOptional = carRepository.findById(Integer.parseInt(carCart.getCarid()));
+        if (!carOptional.isPresent()) return NetMessage.failNetMessage("","没有该款汽车！！");
+        carCart.setTime(CharacterUtil.dataTime());
+        carCartRepository.save(carCart);
+        return NetMessage.successNetMessage("","成功加入购物车！");
+    }
+
+    @Override
+    public NetMessage getCarCart(String userid) {
+        List<CarCart> carCarts = carCartRepository.getByUseridOrderByTimeDesc(userid);
+        if (carCarts != null && !carCarts.isEmpty()){
+            return NetMessage.successNetMessage("",carCarts);
+        }
+        return NetMessage.failNetMessage("","暂无商品！！");
+    }
+    @Override
+    public NetMessage saveCarPrice(String data) {
+        HashMap<String, Object> priceObject = ObjectUtils.string2Map(data);
+        String carid = priceObject.get("carid") + "";
+
+        NetMessage info = getInfo(carid);
+        priceObject.put("_id",carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        mongoTemplate.save(priceObject, MONGODB_CAR_PRICE_COLLECTION_NAME);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getCarPrice(String carid) {
+        Criteria criteria = Criteria.where("_id").in(carid,Integer.parseInt(carid));
+        Query query = new Query(criteria);
+        Object one = mongoTemplate.findOne(query, Object.class, MONGODB_CAR_PRICE_COLLECTION_NAME);
+        if (one != null) return NetMessage.successNetMessage("",one);
+        return NetMessage.failNetMessage("","暂无需要信息！！");
+    }
+
+    @Override
+    public NetMessage addRentOrder(RentOrder rentOrder) {
+        Optional<Car> byId = carRepository.findById(Integer.parseInt(rentOrder.getCarid()));
+        NetMessage info = getInfo(rentOrder.getCarid());
+        if (info.getStatus() == NetMessage.FAIl) return info;
+
+       info = accountService.getUser(rentOrder.getUserid());
+       if (info.getStatus() == NetMessage.FAIl)return info;
+
+        carRentOrderRepository.save(rentOrder);
+        return NetMessage.successNetMessage("","保存成功");
+    }
+
+    @Override
+    public NetMessage getRentOrder(RentOrder rentOrder) {
+        List<RentOrder> rentOrders = carRentOrderRepository.findAll(new Specification<RentOrder>() {
+            @Override
+            public Predicate toPredicate(Root<RentOrder> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> list = new ArrayList<>();
+                list.add(criteriaBuilder.equal(root.get("userid").as(String.class), rentOrder.getUserid()));
+                return criteriaBuilder.and(list.toArray(new Predicate[list.size()]));
+            }
+        });
+        return  (rentOrders != null && !rentOrders.isEmpty()) ?
+                NetMessage.successNetMessage("",rentOrders) :
+                NetMessage.failNetMessage("","暂无租车信息！！");
+    }
+
+    @Override
+    public NetMessage saveTestOrder(TestOrder testOrder) {
+        NetMessage info = accountService.getUser(testOrder.getUserid());
+        if (info.getStatus() == NetMessage.FAIl) return info;
+
+        info = getInfo(testOrder.getCarid());
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        carTestOrderRepository.save(testOrder);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getTestOrders(TestOrder testOrder) {
+        List<TestOrder> all = carTestOrderRepository.findAll(new Specification<TestOrder>() {
+            @Override
+            public Predicate toPredicate(Root<TestOrder> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                ArrayList<Predicate> list = new ArrayList<>();
+                if (!CharacterUtil.isEmpty(testOrder.getUserid())) {
+                    list.add(criteriaBuilder.equal(root.get("userid").as(String.class),testOrder.getUserid()));
+                }
+                return criteriaBuilder.and(list.toArray(new Predicate[list.size()]));
+            }
+        });
+        return (all != null && !all.isEmpty()) ?
+                NetMessage.successNetMessage("",all):
+                NetMessage.failNetMessage("","没有您需要的信息！！");
+    }
+
     @Value("${basic.project.img.home}")
     private String IMG_PATH;
     private String img_parent_path = "/car/brands";
+    @Autowired
+    private CarBrandRepository carBrandRepository;
+    @Autowired
+    private CarCommentRepository carCommentRepository;
+    @Autowired
+    private CarRepository carRepository;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private CarCartRepository carCartRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+    @Autowired
+    private CarRentOrderRepository carRentOrderRepository;
+    @Autowired
+    private CarTestOrderRepository carTestOrderRepository;
 }
