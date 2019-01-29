@@ -1,6 +1,7 @@
 package com.yanshang.car;
 
 import com.yanshang.car.commons.BaseDao;
+import com.yanshang.car.commons.CharacterUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,35 +19,50 @@ import java.util.regex.Pattern;
 public class MainTest {
 
     public static void main(String[] args) {
-//        String str = "你是不是傻"; // 需要检测的字符串
-//        String pattern  = ".*不.*"; // 正则字符串
-//
-//        boolean matches = Pattern.matches(pattern, str);
-//        System.out.println(matches);
-//        String mobile = "18132070787";
-//        // "[1]"代表第1位为数字1，"[358]"代表第二位可以为3、5、8中的一个，"\\d{9}"代表后面是可以是0～9的数字，有9位。
-//        String regex = "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$";
-//        Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-//        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-//
-//        while (true) {
-//            try {
-//                mobile = br.readLine();
-//                if ("exit".equals(mobile)) return;
-//                Matcher m = p.matcher(mobile);
-//                boolean matches = m.matches();
-//                System.out.println(matches);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
-        boolean database = BaseDao.createDatabase("car", "localhost", "root", "root");
-        System.out.println(database);
+        time();
 
     }
     public static void check(Integer a,Integer b) {
         a = 100;
         b = 200;
+    }
+    public static void createDatabase() {
+        boolean database = BaseDao.createDatabase("car", "localhost", "root", "root");
+        System.out.println(database);
+    }
+    public static void time() {
+        System.out.println(CharacterUtil.dataTime());
+        System.out.println(CharacterUtil.year());
+        System.out.println(CharacterUtil.month());
+        System.out.println(CharacterUtil.day());
+        System.out.println(CharacterUtil.hour());
+        System.out.println(CharacterUtil.minute());
+        System.out.println(CharacterUtil.second());
+        System.out.println(CharacterUtil.millisecond());
+    }
+    public static void regex() {
+        String str = "你是不是傻"; // 需要检测的字符串
+        String pattern  = ".*不.*"; // 正则字符串
+
+        boolean matches = Pattern.matches(pattern, str);
+        System.out.println(matches);
+        String mobile = "18132070787";
+        // "[1]"代表第1位为数字1，"[358]"代表第二位可以为3、5、8中的一个，"\\d{9}"代表后面是可以是0～9的数字，有9位。
+        String regex = "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$";
+        Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+
+        while (true) {
+            try {
+                mobile = br.readLine();
+                if ("exit".equals(mobile)) return;
+                Matcher m = p.matcher(mobile);
+                matches = m.matches();
+                System.out.println(matches);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }

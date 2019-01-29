@@ -22,9 +22,9 @@ public class NewsComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer commentid; // 评论编号
-    private String title; // 评论标题
     private String content; // 评论内容
-    private String observer; // 评论人
+    private String newsid; // 新闻编号
+    private String userid; // 评论人
     private String time; // 评论时间
     private int praise; // 点赞个数
     private int commentCount; // 评论个数

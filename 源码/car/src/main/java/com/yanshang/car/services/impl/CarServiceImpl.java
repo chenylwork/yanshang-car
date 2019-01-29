@@ -174,11 +174,12 @@ public class CarServiceImpl implements CarService {
         if (carBrand.getBrandid() == null) {
             if (oldCarBrand != null && oldCarBrand.getBrandid() != null) return NetMessage.failNetMessage("","该品牌已存在！！");
         }
-        if (file.getOriginalFilename().lastIndexOf(".") == -1);
-        String originalFilename = file.getOriginalFilename();
-        int i = originalFilename.lastIndexOf(".");
-        String suffix = (i == -1) ? "" : originalFilename.substring(i);
-        String fileName = name+suffix;
+        String fileName = FileUtil.getFileName(file,name);
+//        if (file.getOriginalFilename().lastIndexOf(".") == -1);
+//        String originalFilename = file.getOriginalFilename();
+//        int i = originalFilename.lastIndexOf(".");
+//        String suffix = (i == -1) ? "" : originalFilename.substring(i);
+//        String fileName = name+suffix;
         try {
             file.transferTo(FileUtil.createFile(IMG_PATH+img_parent_path+"/"+fileName));
         } catch (IOException e) {

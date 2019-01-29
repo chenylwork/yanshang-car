@@ -58,12 +58,33 @@ public class CharacterUtil {
         String pattern = YEAR + "-" + MONTH + "-" + DAY + " "+ HOUR + ":" + MINUTE + ":" + SECOND + " " + MILLISECOND;
         return new SimpleDateFormat(pattern).format(new Date());
     }
+    public static String year() {
+        return dataTime().substring(0,4);
+    }
+    public static String month() {
+        return dataTime().substring(5,7);
+    }
+    public static String day() {
+        return dataTime().substring(8,10);
+    }
+    public static String hour() {
+        return dataTime().substring(11,13);
+    }
+    public static String minute() {
+        return dataTime().substring(14,16);
+    }
+    public static String second() {
+        return dataTime().substring(17,19);
+    }
+    public static String millisecond() {
+        return dataTime().substring(20,23);
+    }
 
     private static final String YEAR = "yyyy"; // 年
-    private static final String MONTH = "mm"; // 月
+    private static final String MONTH = "MM"; // 月
     private static final String DAY = "dd"; // 日
     private static final String HOUR = "HH"; // 时
-    private static final String MINUTE = "MM"; // 分
+    private static final String MINUTE = "mm"; // 分
     private static final String SECOND = "ss"; // 秒
     private static final String MILLISECOND = "SSS"; // 毫秒
 }

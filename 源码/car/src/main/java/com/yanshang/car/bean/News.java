@@ -24,8 +24,9 @@ public class News {
     private Integer newsid; // 编号
     private String title; // 标题
     private String content; // 内容
+    private String userid; // 用户编号
     private String time; // 发布时间
-    private int show; // 查看次数
-    private int praise; // 点赞个数
-    private int comment; // 评论个数
+    private int showCount = 0; // 查看次数
+    private int praise = 0; // 点赞个数
+    private int comment = 0; // 评论个数
 }

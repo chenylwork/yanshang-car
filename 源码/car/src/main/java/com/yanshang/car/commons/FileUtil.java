@@ -1,9 +1,9 @@
 package com.yanshang.car.commons;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -28,6 +28,43 @@ public class FileUtil {
         return file;
     }
 
+    /**
+     * 删除文件
+     * @param path
+     */
+    public static void removeFile(String path) {
+        File file = new File(path);
+        if (file.exists()) file.delete();
+    }
+
+    /**
+     * 判断文件是否是图片
+     * @param file
+     * @return
+     */
+    public static boolean isImage(MultipartFile file) {
+        try {
+            if (ImageIO.read(file.getInputStream()) == null) return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    /**
+     * 获取文件名称
+     * @param file
+     * @param name
+     * @return
+     */
+    public static String getFileName(MultipartFile file,String name) {
+        if (file.getOriginalFilename().lastIndexOf(".") == -1);
+        String originalFilename = file.getOriginalFilename();
+        int i = originalFilename.lastIndexOf(".");
+        String suffix = (i == -1) ? "" : originalFilename.substring(i);
+        String fileName = name+suffix;
+        return fileName;
+    }
     /**
      * 判断两个文件是否相同
      * 1.判断两者是否为空的情况
