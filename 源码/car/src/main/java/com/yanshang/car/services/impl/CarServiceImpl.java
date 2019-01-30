@@ -153,7 +153,7 @@ public class CarServiceImpl implements CarService {
     @Override
     public NetMessage getDetails(String identity) {
         if (CharacterUtil.isEmpty(identity)) identity = "0";
-        Query query = new Query(Criteria.where("_id").is(identity));
+        Query query = new Query(Criteria.where("_id").in(identity,Integer.parseInt(identity)));
         Object o = mongoTemplate.findOne(query,Object.class,MONGODB_CAR_COLLECTION_NAME);
         if(o != null) {
             return NetMessage.successNetMessage("",o);

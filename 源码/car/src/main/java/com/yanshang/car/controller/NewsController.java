@@ -38,7 +38,7 @@ public class NewsController {
     }
 
     @RequestMapping("/get")
-    public NetMessage getNews(HashMap<String,String> data) {
+    public NetMessage getNews(@RequestParam HashMap<String,String> data) {
         return newsService.getNews(data);
     }
 
@@ -54,10 +54,8 @@ public class NewsController {
     }
 
     @RequestMapping("/comment/get")
-    public NetMessage getComment(NewsComment newsComment,
-                                 @PathVariable(value = "start",required=false)Integer start,
-                                 @PathVariable(value = "end",required=false)Integer end) {
-        return newsService.getComment(newsComment,start,end);
+    public NetMessage getComment(@RequestParam HashMap<String,String> data) {
+        return newsService.getComment(data);
     }
 
 }

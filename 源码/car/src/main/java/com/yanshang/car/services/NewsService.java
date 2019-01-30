@@ -38,11 +38,12 @@ public interface NewsService {
 
     /**
      * 分页获取获取新闻评论
-     * @param newsComment
-     * @param start 起始记录数
-     * @param end 结束记录数
+     * @param data Map对象
+     *             有用参数：no：查询页码（可选，从零开始）
+     *             end：每页显示记录数（与start参数搭配使用）
+     *             newsid：新闻编号
      * @return
      */
-    NetMessage getComment(NewsComment newsComment,final Integer start,final Integer end);
+    NetMessage getComment(HashMap<String,String> data);
 
 }

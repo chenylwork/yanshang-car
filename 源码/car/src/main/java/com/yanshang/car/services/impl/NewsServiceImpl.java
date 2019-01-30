@@ -87,10 +87,10 @@ public class NewsServiceImpl implements NewsService {
                     NetMessage.successNetMessage("", byId.get()) :
                     NetMessage.failNetMessage("", "没有需要的信息！！");
         }
-        String start = data.get("start");
-        String end = data.get("end");
-        if (start == null || end == null) return NetMessage.failNetMessage("", "需要查询记录区间！！");
-        QPageRequest qPageRequest = new QPageRequest(Integer.parseInt(start), Integer.parseInt(end));
+        String no = data.get("no");
+        String size = data.get("size");
+        if (no == null || size == null) return NetMessage.failNetMessage("", "需要查询记录区间！！");
+        QPageRequest qPageRequest = new QPageRequest(Integer.parseInt(no), Integer.parseInt(size));
         Page<News> page = newsRepository.findAll(new Specification<News>() {
             @Override
             public Predicate toPredicate(Root<News> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
@@ -120,23 +120,25 @@ public class NewsServiceImpl implements NewsService {
     }
 
     /**
-     * 分页获取评论信息
-     * 如果查询条件有新闻标题，根据新闻标题查询
      *
-     * @param newsComment
-     * @param start       起始记录数
-     * @param end         结束记录数
+     * @param data Map对象
+     *             有用参数：start：查询开始记录（可选）
+     *             end：查询结束记录（与start参数搭配使用）
      * @return
      */
     @Override
-    public NetMessage getComment(NewsComment newsComment, final Integer start, final Integer end) {
-        if (start == 0 || end == 0) return NetMessage.failNetMessage("", "需要查询记录区间！！");
-        QPageRequest qPageRequest = new QPageRequest(start, end);
+    public NetMessage getComment(HashMap<String, String> data) {
+
+        String no = data.get("no");
+        String size = data.get("size");
+        if (no == null || size == null) return NetMessage.failNetMessage("", "需要查询记录区间！！");
+
+        QPageRequest qPageRequest = new QPageRequest(Integer.parseInt(no), Integer.parseInt(size));
         Page<NewsComment> page = newsCommentRepository.findAll(new Specification<NewsComment>() {
             @Override
             public Predicate toPredicate(Root<NewsComment> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> list = new ArrayList<>();
-                String newsid = newsComment.getNewsid();
+                String newsid = data.get("newsid");
                 if (!CharacterUtil.isEmpty(newsid)) {
                     list.add(criteriaBuilder.equal(root.get("newsid").as(String.class), newsid));
                 }

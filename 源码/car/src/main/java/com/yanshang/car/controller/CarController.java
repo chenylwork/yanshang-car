@@ -93,6 +93,11 @@ public class CarController {
         return null;
     }
 
+    @RequestMapping("/colors/save")
+    public NetMessage saveColors(String color,MultipartFile file) {
+        return null;
+    }
+
     /**
      * 根据汽车标识获取汽车的所有类型
      * @param identity
