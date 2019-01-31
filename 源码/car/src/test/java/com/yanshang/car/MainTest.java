@@ -2,6 +2,7 @@ package com.yanshang.car;
 
 import com.yanshang.car.commons.BaseDao;
 import com.yanshang.car.commons.CharacterUtil;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,8 +20,11 @@ import java.util.regex.Pattern;
 public class MainTest {
 
     public static void main(String[] args) {
-        time();
+//        time();
+//        7eca689f0d3389d9dea66ae112e5cfd7
+//        7eca689f0d3389d9dea66ae112e5cfd7
 
+        System.out.println(DigestUtils.md5Hex("你好"));
     }
     public static void check(Integer a,Integer b) {
         a = 100;

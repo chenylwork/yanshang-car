@@ -13,6 +13,8 @@ import com.yanshang.car.dao.MongodbDao;
 import com.yanshang.car.repositories.*;
 import com.yanshang.car.services.AccountService;
 import com.yanshang.car.services.CarService;
+import com.yanshang.car.services.ServerService;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -143,11 +145,41 @@ public class CarServiceImpl implements CarService {
     @Override
     public NetMessage getInfo(String identity) {
         if (CharacterUtil.isEmpty(identity)) identity = "0";
-        Optional<Car> byId = carRepository.findById(Integer.parseInt(identity));
-        if(byId != null && byId.isPresent()) {
-            return NetMessage.successNetMessage("",byId.get());
+        Optional<Car> one = carRepository.findById(Integer.parseInt(identity));
+        if(one != null && one.isPresent()) {
+            return NetMessage.successNetMessage("",one.get());
         }
         return NetMessage.failNetMessage("","暂无该款汽车！！");
+    }
+
+    @Override
+    public NetMessage getInfos(HashMap<String, String> data) {
+        String no = data.get("no");
+        String size = data.get("size");
+        if (CharacterUtil.isEmpty(no) || CharacterUtil.isEmpty(size)) return NetMessage.failNetMessage("","需要获取数据定位参数！！");
+        QPageRequest qPageRequest = new QPageRequest(Integer.parseInt(no),Integer.parseInt(size));
+        Page<Car> all = carRepository.findAll(new Specification<Car>() {
+            @Override
+            public Predicate toPredicate(Root<Car> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> list = new ArrayList<>();
+                String label = data.get("label");
+                if (!CharacterUtil.isEmpty(label)) {
+                    list.add(criteriaBuilder.like(root.get("").as(String.class),"%"+label+"%"));
+                }
+                return criteriaBuilder.and(list.toArray(new Predicate[list.size()]));
+            }
+        }, qPageRequest);
+
+        return (all.isEmpty()) ?
+                NetMessage.failNetMessage("","没有您需要的信息！！"):
+                NetMessage.successNetMessage("",all);
+    }
+
+    @Override
+    public NetMessage getTypes() {
+        Map<String,String> map = new HashMap<>();
+        map.put("type","car_label");
+        return serverService.codes(map);
     }
 
     @Override
@@ -181,12 +213,12 @@ public class CarServiceImpl implements CarService {
 //        String suffix = (i == -1) ? "" : originalFilename.substring(i);
 //        String fileName = name+suffix;
         try {
-            file.transferTo(FileUtil.createFile(IMG_PATH+img_parent_path+"/"+fileName));
+            file.transferTo(FileUtil.createFile(IMG_PATH+img_brand_path+"/"+fileName));
         } catch (IOException e) {
             e.printStackTrace();
             return NetMessage.failNetMessage("","保存失败,品牌图片保存失败！！");
         }
-        carBrand.setImages(img_parent_path+"/"+fileName);
+        carBrand.setImages(img_brand_path+"/"+fileName);
         carBrandRepository.save(carBrand);
         return NetMessage.successNetMessage("","保存成功！！");
     }
@@ -212,6 +244,94 @@ public class CarServiceImpl implements CarService {
         }
         return NetMessage.failNetMessage("","暂无商品！！");
     }
+
+    @Override
+    public NetMessage saveLabel(String carid, String label) {
+        NetMessage info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        Car car = (Car) info.getContent();
+        car.setLabel(label);
+        carRepository.save(car);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage upColors(String carid, String color, MultipartFile file) {
+        NetMessage info = check(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+
+        HashMap<String,Object> content = (HashMap<String,Object>)info.getContent();
+        String filePath = img_car_path+"/"+carid+"/"+FileUtil.getFileName(file, DigestUtils.md5Hex(color));
+        File file1 = FileUtil.createFile(IMG_PATH + filePath);
+        if(!FileUtil.isImage(file)){
+            return NetMessage.failNetMessage("","文件非图片文件！！");
+        }
+        try {
+            file.transferTo(file1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        content.put(color,filePath);
+        mongoTemplate.save(content, MONGODB_CAR_IMAGE_COLLECTION_NAME);
+        return NetMessage.successNetMessage("","上传成功！！");
+    }
+
+    @Override
+    public NetMessage getImages(String carid) {
+        Query query = new Query(Criteria.where("_id").in(carid, Integer.parseInt(carid)));
+        HashMap<String,Object> map = mongoTemplate.findOne(query, HashMap.class, MONGODB_CAR_IMAGE_COLLECTION_NAME);
+        return  (map == null) ?
+                NetMessage.failNetMessage("","没有您需要的信息！！"):
+                NetMessage.successNetMessage("",map);
+    }
+
+    @Override
+    public NetMessage upImage(String carid, MultipartFile... file) {
+        if (file == null || file.length <= 0) return NetMessage.failNetMessage("","请上传汽车图片！！");
+        NetMessage info = check(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        HashMap<String,Object> content = (HashMap<String,Object>)info.getContent();
+        List<String> filePaths = new ArrayList<>();
+        List<String> fileNames = new ArrayList<>();
+        for (int i =0; i<file.length; i++){
+            String fileName = img_car_path+"/"+carid+"/"+FileUtil.getFileName(file[i], DigestUtils.md5Hex(i+""));
+            fileNames.add(fileName);
+            String filePath = IMG_PATH + fileName;
+            if(!FileUtil.isImage(file[i])){
+                FileUtil.removeFilesByPath(filePaths);
+                return NetMessage.failNetMessage("","文件有非图片文件！！");
+            }
+            filePaths.add(filePath);
+            try {
+                file[i].transferTo(FileUtil.createFile(filePath));
+            } catch (Exception e) {
+                e.printStackTrace();
+                FileUtil.removeFilesByPath(filePaths);
+                return NetMessage.failNetMessage("","文件上传异常！！");
+            }
+
+        }
+        content.put("images",fileNames);
+        mongoTemplate.save(content,MONGODB_CAR_IMAGE_COLLECTION_NAME);
+        return NetMessage.successNetMessage("","图片上传成功！！");
+    }
+
+    private NetMessage check(String carid) {
+        NetMessage info = getImages(carid);
+        HashMap<String,Object> map = null;
+        if (info.getStatus() == NetMessage.FAIl){
+            info = getInfo(carid);
+            if (info.getStatus() == NetMessage.FAIl) return info;
+            map = new HashMap<>();
+            map.put("_id",carid);
+            info.setContent(map);
+        } else {
+            map = (HashMap<String, Object>) info.getContent();
+            info.setContent(map);
+        }
+        return info;
+    }
+
     @Override
     public NetMessage saveCarPrice(String data) {
         HashMap<String, Object> priceObject = ObjectUtils.string2Map(data);
@@ -291,7 +411,8 @@ public class CarServiceImpl implements CarService {
 
     @Value("${basic.project.img.home}")
     private String IMG_PATH;
-    private String img_parent_path = "/car/brands";
+    private String img_brand_path = "/brands";
+    private String img_car_path = "/car";
     @Autowired
     private CarBrandRepository carBrandRepository;
     @Autowired
@@ -308,4 +429,6 @@ public class CarServiceImpl implements CarService {
     private CarRentOrderRepository carRentOrderRepository;
     @Autowired
     private CarTestOrderRepository carTestOrderRepository;
+    @Autowired
+    private ServerService serverService;
 }

@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -37,6 +38,20 @@ public class FileUtil {
         if (file.exists()) file.delete();
     }
 
+    public static void removeFile(File file) {
+        if (file.exists()) file.delete();
+    }
+
+    public static void removeFiles(List<File> files) {
+        if (files == null && files.isEmpty()) return;
+        for (File file : files) removeFile(file);
+    }
+    public static void removeFilesByPath(List<String> files) {
+        if (files == null && files.isEmpty()) return;
+        for (String filePath : files) removeFile(filePath);
+    }
+
+
     /**
      * 判断文件是否是图片
      * @param file
@@ -65,6 +80,7 @@ public class FileUtil {
         String fileName = name+suffix;
         return fileName;
     }
+
     /**
      * 判断两个文件是否相同
      * 1.判断两者是否为空的情况

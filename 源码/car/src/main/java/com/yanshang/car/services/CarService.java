@@ -17,6 +17,12 @@ public interface CarService {
 
     String MONGODB_CAR_COLLECTION_NAME = "car";
     String MONGODB_CAR_PRICE_COLLECTION_NAME = "car_price";
+    String MONGODB_CAR_IMAGE_COLLECTION_NAME = "car_image";
+
+    String LABEL_RECOMMEND = "0201"; // 推荐标签
+    String LABEL_CALL = "0202"; // 挂靠标签
+    String LABEL_RECYCLE= "0203"; // 回收标签
+
     /**
      * 获取全部汽车品牌
      * @return
@@ -59,6 +65,19 @@ public interface CarService {
      * @return
      */
     NetMessage getInfo(String identity);
+
+    /**
+     * 获取汽车集合
+     * @param data
+     * @return
+     */
+    NetMessage getInfos(HashMap<String,String> data);
+
+    /**
+     * 获取汽车类型标签
+     * @return
+     */
+    NetMessage getTypes();
     /**
      * 根据汽车标识获取汽车详细配置信息
      * @param identity
@@ -88,6 +107,37 @@ public interface CarService {
      */
     NetMessage getCarCart(String userid);
 
+    /**
+     * 设置汽车标签
+     * @param carid
+     * @param label
+     * @return
+     */
+    NetMessage saveLabel(String carid,String label);
+
+    /**
+     * 上传汽车颜色对应的照片
+     * @param carid
+     * @param color
+     * @param file
+     * @return
+     */
+    NetMessage upColors(String carid,String color,MultipartFile file);
+
+    /**
+     * 获取汽车图片
+     * @param carid
+     * @return
+     */
+    NetMessage getImages(String carid);
+
+    /**
+     * 上传汽车图片
+     * @param carid
+     * @param file
+     * @return
+     */
+    NetMessage upImage(String carid,MultipartFile... file);
     /**
      * 录入汽车价钱信息
      * @param data json数据

@@ -3,11 +3,17 @@ package com.yanshang.car.controller;
 import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.CarService;
+import com.yanshang.car.services.ServerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import sun.nio.ch.Net;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /*
  * @ClassName CarRepository
@@ -53,6 +59,10 @@ public class CarController {
         return carService.saveInfo(data);
     }
 
+    @RequestMapping("/save/label")
+    public NetMessage saveLabel(String carid,String label) {
+        return carService.saveLabel(carid,label);
+    }
     /**
      * 根据汽车标识获取汽车基本信息
      * @param identity 汽车标识
@@ -63,6 +73,10 @@ public class CarController {
         return carService.getInfo(identity);
     }
 
+    @RequestMapping("/infos")
+    public NetMessage infos(@RequestParam HashMap<String,String> data) {
+        return carService.getInfos(data);
+    }
     /**
      * 获取汽车详细配置信息
      * @param identity 汽车标识
@@ -83,29 +97,47 @@ public class CarController {
         return carService.getAllCarBrand();
     }
 
+
     /**
-     * 根据汽车唯一标识获取汽车的所有颜色
-     * @param identity
+     * 获取汽车图片：
+     * @param carid
      * @return
      */
-    @RequestMapping("/colors")
-    public NetMessage colors(String identity) {
-        return null;
-    }
-
-    @RequestMapping("/colors/save")
-    public NetMessage saveColors(String color,MultipartFile file) {
-        return null;
+    @RequestMapping("/image")
+    public NetMessage images(String carid) {
+        return carService.getImages(carid);
     }
 
     /**
-     * 根据汽车标识获取汽车的所有类型
-     * @param identity
+     * 上传汽车对应颜色照片
+     * @param color
+     * @param file
+     * @return
+     */
+    @RequestMapping("/colors/up")
+    public NetMessage saveColors(String carid,String color,MultipartFile file) {
+        return carService.upColors(carid,color,file);
+    }
+
+    /**
+     * 上传汽车颜色
+     * @param carid 汽车编号
+     * @param file 汽车图片集合
+     * @return
+     */
+    @RequestMapping("/image/up")
+    public NetMessage saveImage(String carid,MultipartFile... file) {
+        return carService.upImage(carid,file);
+    }
+
+
+    /**
+     * 获取汽车类型
      * @return
      */
     @RequestMapping("/types")
-    public NetMessage types(String identity) {
-        return null;
+    public NetMessage types() {
+        return carService.getTypes();
     }
 
     /**
