@@ -23,8 +23,10 @@ public class MainTest {
 //        time();
 //        7eca689f0d3389d9dea66ae112e5cfd7
 //        7eca689f0d3389d9dea66ae112e5cfd7
+//        25f9f2ff19b0eecef6dccd65d4c43e59
+//        385f5f004e343c6201061a8cd918d677
 
-        System.out.println(DigestUtils.md5Hex("你好"));
+        System.out.println(DigestUtils.md5Hex("开机键事不关己"));
     }
     public static void check(Integer a,Integer b) {
         a = 100;

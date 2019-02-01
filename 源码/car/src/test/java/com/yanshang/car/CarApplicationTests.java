@@ -11,6 +11,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -28,6 +31,8 @@ public class CarApplicationTests {
 	private CarRepository carRepository;
 	@Autowired
 	private MongodbDao mongodbDao;
+	@Autowired
+	private MongoTemplate mongoTemplate;
 
 	@Test
 	public void contextLoads() {
@@ -53,8 +58,18 @@ public class CarApplicationTests {
     public void mongoGet() {
         List<HashMap> carList = mongodbDao.get("car");
         for (HashMap map : carList) {
-            System.out.println(map);
+//            System.out.println(map);
         }
+    }
+
+    @Test
+    public void mongoTest() {
+        Criteria where = Criteria.where("basic.carid").is("6");
+        Query query = new Query(where);
+        List<Object> car = mongoTemplate.find(query, Object.class, "car");
+        System.out.println("输出的结果开始");
+        System.out.println(car);
+        System.out.println("输出的结果结束");
     }
 
 

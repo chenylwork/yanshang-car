@@ -16,7 +16,7 @@ import javax.persistence.*;
  **/
 @Data
 @Entity
-@Table(name="t_car")
+@Table(name="t_car",uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
 @AllArgsConstructor
 @NoArgsConstructor
 public class Car {

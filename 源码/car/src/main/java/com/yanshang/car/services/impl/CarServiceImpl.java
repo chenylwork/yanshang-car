@@ -1,15 +1,9 @@
 package com.yanshang.car.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.result.UpdateResult;
+import com.mongodb.DBObject;
 import com.yanshang.car.bean.*;
-import com.yanshang.car.commons.CharacterUtil;
-import com.yanshang.car.commons.FileUtil;
-import com.yanshang.car.commons.NetMessage;
-import com.yanshang.car.commons.ObjectUtils;
-import com.yanshang.car.dao.MongodbDao;
+import com.yanshang.car.commons.*;
 import com.yanshang.car.repositories.*;
 import com.yanshang.car.services.AccountService;
 import com.yanshang.car.services.CarService;
@@ -18,12 +12,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.querydsl.QPageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +25,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
-import java.io.DataInput;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -79,29 +70,31 @@ public class CarServiceImpl implements CarService {
         return NetMessage.failNetMessage("","暂无主打车！！");
     }
 
+
     @Override
     public NetMessage saveInfo(String data) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = null;
+        HashMap<String, Object> map = null;
         try {
-            JsonNode jsonNode = objectMapper.readTree(data);
-            JsonNode basic = jsonNode.get("basic");
-            Car car = objectMapper.readValue(basic.toString(), Car.class);
-            if(carRepository.getByName(car.getName()) == null) {
-                HashMap<String,Object> hashMap = objectMapper.readValue(data, HashMap.class);
-                car = carRepository.save(car);
-                hashMap.put("basic", car);
-                hashMap.put("_id",car.getCarid());
-                mongoTemplate.save(hashMap,MONGODB_CAR_COLLECTION_NAME);
-            } else {
-                return NetMessage.failNetMessage("","该汽车信息已存在！！");
-            }
-            System.out.println(car);
+            jsonNode = ObjectUtils.objectMapper.readTree(data);
         } catch (IOException e) {
             e.printStackTrace();
-            return NetMessage.errorNetMessage();
         }
+        HashMap<String, Object> basic = ObjectUtils.string2Map(jsonNode.get("basic").toString());
+        Object carid = basic.get("carid");
+        map = ObjectUtils.string2Map(data);
+        if (carid == null) { // 添加
+            carid = DigestUtils.md5Hex(basic.get("name").toString());
+            if(mongoTemplate.findById(carid,Object.class,MONGODB_CAR_COLLECTION_NAME) != null)
+                return NetMessage.failNetMessage("","该汽车信息已存在！！");
+            basic.put("carid",carid);
+        }
+        map.put("_id",carid);
+        map.put("basic", basic);
+        mongoTemplate.save(map,MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","保存成功");
     }
+
     @Override
     public NetMessage publishComments(CarComment comment) {
         String failContent = "";
@@ -183,14 +176,38 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public NetMessage getDetails(String identity) {
-        if (CharacterUtil.isEmpty(identity)) identity = "0";
-        Query query = new Query(Criteria.where("_id").in(identity,Integer.parseInt(identity)));
-        Object o = mongoTemplate.findOne(query,Object.class,MONGODB_CAR_COLLECTION_NAME);
-        if(o != null) {
+    public NetMessage getDetails(HashMap<String,String> data) {
+        if (data == null || data.isEmpty()) return NetMessage.failNetMessage("","不明查询信息！！");
+        Criteria criteria = null;
+        Query query = new Query();
+        // 获取唯一汽车信息
+        String carid = data.get("carid");
+        System.out.println(carid != null && !"".equals(carid));
+        if (carid != null && !"".equals(carid)) {
+            criteria = Criteria.where("_id").is(carid);
+            query.addCriteria(criteria);
+            Object o = mongoTemplate.findOne(query,Object.class,MONGODB_CAR_COLLECTION_NAME);
             return NetMessage.successNetMessage("",o);
         }
-        return NetMessage.failNetMessage("","没有您需要的汽车信息！！");
+
+        // 获取信息集合
+        String no = data.get("no");
+        String size = data.get("size");
+
+        String label = data.get("label");
+        if (!CharacterUtil.isEmpty(label)){
+            criteria = Criteria.where("basic.label").regex("^.*"+label+".*$");
+            query.addCriteria(criteria);
+        }
+        long start = (Integer.parseInt(no) - 1) * Integer.parseInt(size);
+        query = query.skip(start).limit(Integer.parseInt(size));
+        List<DBObject> list = mongoTemplate.find(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
+        long count = mongoTemplate.count(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
+//        Page<DBObject> PageImpl = new PageImpl<>(list,new QPageRequest(Integer.parseInt(no),Integer.parseInt(size)),count);
+        MPage page = new MPage(Integer.parseInt(no),Integer.parseInt(size));
+        page.setCount(count);
+        page.setData(list);
+        return NetMessage.successNetMessage("",page);
     }
 
 

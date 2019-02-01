@@ -5,6 +5,7 @@ import com.yanshang.car.commons.NetMessage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /*
  * @ClassName CarRepository
@@ -79,11 +80,11 @@ public interface CarService {
      */
     NetMessage getTypes();
     /**
-     * 根据汽车标识获取汽车详细配置信息
-     * @param identity
+     * 获取汽车详细配置信息
+     * @param data
      * @return
      */
-    NetMessage getDetails(String identity);
+    NetMessage getDetails(HashMap<String,String> data);
 
     /**
      * 添加汽车品牌信息

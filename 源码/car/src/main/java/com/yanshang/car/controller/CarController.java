@@ -52,7 +52,7 @@ public class CarController {
     /**
      * 保存汽车信息
      * @param data
-     * @return
+     * @return ,MultipartFile... file
      */
     @RequestMapping("/save/info")
     public NetMessage saveInfo(String data) {
@@ -83,7 +83,7 @@ public class CarController {
      * @return
      */
     @RequestMapping("/details")
-    public NetMessage details(String identity) {
+    public NetMessage details(@RequestParam HashMap<String,String> identity) {
         return carService.getDetails(identity);
     }
 

@@ -15,7 +15,7 @@ import java.util.HashMap;
  * @Version 1.0
  **/
 public class ObjectUtils {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 对象转换为json字符串
@@ -57,9 +57,26 @@ public class ObjectUtils {
      * @return
      */
     public static HashMap<String,Object> string2Map(String data) {
-        if (data == null) return null;
+        if (CharacterUtil.isEmpty(data)) return null;
         try {
             return objectMapper.readValue(data,HashMap.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /***
+     * 读取string为对象
+     * @param data
+     * @param classEntity
+     * @param <T>
+     * @return
+     */
+    public static <T> T string2Object(String data,Class<T> classEntity) {
+        if (CharacterUtil.isEmpty(data)) return null;
+        try {
+            return objectMapper.readValue(data,classEntity);
         } catch (IOException e) {
             e.printStackTrace();
         }
