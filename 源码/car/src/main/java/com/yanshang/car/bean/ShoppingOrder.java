@@ -15,10 +15,10 @@ import javax.persistence.*;
  **/
 @Data
 @Entity
-@Table(name="t_order_commodity")
+@Table(name="t_order_shop")
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommodityOrder {
+public class ShoppingOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderid; // 订单编号

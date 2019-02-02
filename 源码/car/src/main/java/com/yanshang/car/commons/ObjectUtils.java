@@ -33,6 +33,14 @@ public class ObjectUtils {
         }
     }
 
+    public static JsonNode string2JsonNode(String data) {
+        try {
+            return objectMapper.readTree(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * 对象转换为map
      * @param object

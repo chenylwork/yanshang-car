@@ -48,25 +48,26 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    @Deprecated
     public NetMessage getRecommend(String brand) {
-        List<Car> all = carRepository.findAll(new Specification<Car>() {
-            @Override
-            public Predicate toPredicate(Root<Car> root, CriteriaQuery<?> query,
-                                         CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicates = new ArrayList<>();
-                // 品牌拼接
-                if (!CharacterUtil.isEmpty(brand)) {
-                    predicates.add(criteriaBuilder.equal(root.get("brand").as(String.class), brand));
-                }
-                // 标签拼接
-                predicates.add(criteriaBuilder.like(root.get("label").as(String.class),"%"+CarRepository.LABEL_RECOMMEND+"%"));
-//                CriteriaBuilder.In<Object> labels = criteriaBuilder.in(root.get("label"));
-//                labels.value(CarRepository.LABEL_RECOMMEND);
-//                predicates.add(labels);
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-            }
-        });
-        if (all != null && !all.isEmpty()) return NetMessage.successNetMessage("",all);
+//        List<Car> all = carRepository.findAll(new Specification<Car>() {
+//            @Override
+//            public Predicate toPredicate(Root<Car> root, CriteriaQuery<?> query,
+//                                         CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicates = new ArrayList<>();
+//                // 品牌拼接
+//                if (!CharacterUtil.isEmpty(brand)) {
+//                    predicates.add(criteriaBuilder.equal(root.get("brand").as(String.class), brand));
+//                }
+//                // 标签拼接
+//                predicates.add(criteriaBuilder.like(root.get("label").as(String.class),"%"+CarRepository.LABEL_RECOMMEND+"%"));
+////                CriteriaBuilder.In<Object> labels = criteriaBuilder.in(root.get("label"));
+////                labels.value(CarRepository.LABEL_RECOMMEND);
+////                predicates.add(labels);
+//                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+//            }
+//        });
+//        if (all != null && !all.isEmpty()) return NetMessage.successNetMessage("",all);
         return NetMessage.failNetMessage("","暂无主打车！！");
     }
 
@@ -104,8 +105,8 @@ public class CarServiceImpl implements CarService {
 
         String carID = comment.getCarid();
         if (CharacterUtil.isEmpty(carID)) return NetMessage.failNetMessage("","缺少评论对象！！");
-        Optional<Car> carOptional = carRepository.findById(Integer.parseInt(carID));
-        if (carOptional == null || !carOptional.isPresent()) return NetMessage.failNetMessage("","评论对象不存在！！");
+        NetMessage info = getInfo(carID);
+        if (info.getStatus() == NetMessage.FAIl) return info;
 
         String accountID = comment.getObserver();
         if (CharacterUtil.isEmpty(accountID)) return NetMessage.failNetMessage("","缺少评论人！！");
@@ -136,36 +137,15 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public NetMessage getInfo(String identity) {
-        if (CharacterUtil.isEmpty(identity)) identity = "0";
-        Optional<Car> one = carRepository.findById(Integer.parseInt(identity));
-        if(one != null && one.isPresent()) {
-            return NetMessage.successNetMessage("",one.get());
-        }
-        return NetMessage.failNetMessage("","暂无该款汽车！！");
+    public NetMessage getInfo(String carid) {
+        Map<String,String> map = new HashMap<>();
+        map.put("carid",carid);
+        return getDetails(map);
     }
 
     @Override
     public NetMessage getInfos(HashMap<String, String> data) {
-        String no = data.get("no");
-        String size = data.get("size");
-        if (CharacterUtil.isEmpty(no) || CharacterUtil.isEmpty(size)) return NetMessage.failNetMessage("","需要获取数据定位参数！！");
-        QPageRequest qPageRequest = new QPageRequest(Integer.parseInt(no),Integer.parseInt(size));
-        Page<Car> all = carRepository.findAll(new Specification<Car>() {
-            @Override
-            public Predicate toPredicate(Root<Car> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> list = new ArrayList<>();
-                String label = data.get("label");
-                if (!CharacterUtil.isEmpty(label)) {
-                    list.add(criteriaBuilder.like(root.get("").as(String.class),"%"+label+"%"));
-                }
-                return criteriaBuilder.and(list.toArray(new Predicate[list.size()]));
-            }
-        }, qPageRequest);
-
-        return (all.isEmpty()) ?
-                NetMessage.failNetMessage("","没有您需要的信息！！"):
-                NetMessage.successNetMessage("",all);
+        return getDetails(data);
     }
 
     @Override
@@ -176,18 +156,20 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public NetMessage getDetails(HashMap<String,String> data) {
+    public NetMessage getDetails(Map<String,String> data) {
         if (data == null || data.isEmpty()) return NetMessage.failNetMessage("","不明查询信息！！");
         Criteria criteria = null;
         Query query = new Query();
         // 获取唯一汽车信息
         String carid = data.get("carid");
-        System.out.println(carid != null && !"".equals(carid));
         if (carid != null && !"".equals(carid)) {
             criteria = Criteria.where("_id").is(carid);
             query.addCriteria(criteria);
             Object o = mongoTemplate.findOne(query,Object.class,MONGODB_CAR_COLLECTION_NAME);
-            return NetMessage.successNetMessage("",o);
+
+            return (o != null) ?
+                    NetMessage.successNetMessage("",o) :
+                    NetMessage.failNetMessage("","没有您需要的信息！！");
         }
 
         // 获取信息集合
@@ -202,12 +184,16 @@ public class CarServiceImpl implements CarService {
         long start = (Integer.parseInt(no) - 1) * Integer.parseInt(size);
         query = query.skip(start).limit(Integer.parseInt(size));
         List<DBObject> list = mongoTemplate.find(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
-        long count = mongoTemplate.count(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
 //        Page<DBObject> PageImpl = new PageImpl<>(list,new QPageRequest(Integer.parseInt(no),Integer.parseInt(size)),count);
-        MPage page = new MPage(Integer.parseInt(no),Integer.parseInt(size));
-        page.setCount(count);
-        page.setData(list);
-        return NetMessage.successNetMessage("",page);
+        if (list != null && !list.isEmpty()) {
+            long count = mongoTemplate.count(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
+            MPage page = new MPage(Integer.parseInt(no), Integer.parseInt(size));
+            page.setCount(count);
+            page.setData(list);
+            return NetMessage.successNetMessage("",page);
+        } else {
+            return NetMessage.failNetMessage("","没有您需要的信息！！");
+        }
     }
 
 
@@ -246,8 +232,8 @@ public class CarServiceImpl implements CarService {
         NetMessage netMessage = accountService.getUser(userid);
         if (netMessage.getStatus() == NetMessage.FAIl) return netMessage;
 
-        Optional<Car> carOptional = carRepository.findById(Integer.parseInt(carCart.getCarid()));
-        if (!carOptional.isPresent()) return NetMessage.failNetMessage("","没有该款汽车！！");
+        NetMessage info = getInfo(carCart.getCarid());
+        if (info.getStatus() == NetMessage.FAIl) return info;
         carCart.setTime(CharacterUtil.dataTime());
         carCartRepository.save(carCart);
         return NetMessage.successNetMessage("","成功加入购物车！");
@@ -265,19 +251,26 @@ public class CarServiceImpl implements CarService {
     @Override
     public NetMessage saveLabel(String carid, String label) {
         NetMessage info = getInfo(carid);
-        if (info.getStatus() == NetMessage.FAIl) return info;
-        Car car = (Car) info.getContent();
-        car.setLabel(label);
-        carRepository.save(car);
+        if (info.getStatus() == NetMessage.FAIl) {
+            info.setContent("没有对应的汽车，标签保存失败！！");
+            return info;
+        }
+        HashMap<String, Object> content = (HashMap) info.getContent();
+        HashMap<String, Object> basic = (HashMap)content.get("basic");
+        basic.put("label",label);
+        content.put("basic",basic);
+        mongoTemplate.save(content,MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage upColors(String carid, String color, MultipartFile file) {
-        NetMessage info = check(carid);
-        if (info.getStatus() == NetMessage.FAIl) return info;
+        NetMessage info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("图片上传失败，没有对应汽车信息！！");
 
-        HashMap<String,Object> content = (HashMap<String,Object>)info.getContent();
+        HashMap<String,Object> content = (HashMap)info.getContent();
+        HashMap<String,Object> basic = (HashMap)content.get("basic");
+        HashMap<String,Object> colors = (HashMap)basic.get("colors");
         String filePath = img_car_path+"/"+carid+"/"+FileUtil.getFileName(file, DigestUtils.md5Hex(color));
         File file1 = FileUtil.createFile(IMG_PATH + filePath);
         if(!FileUtil.isImage(file)){
@@ -288,26 +281,30 @@ public class CarServiceImpl implements CarService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        content.put(color,filePath);
-        mongoTemplate.save(content, MONGODB_CAR_IMAGE_COLLECTION_NAME);
+        colors.put(color,filePath);
+        mongoTemplate.save(content, MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","上传成功！！");
     }
 
     @Override
+    @Deprecated
     public NetMessage getImages(String carid) {
-        Query query = new Query(Criteria.where("_id").in(carid, Integer.parseInt(carid)));
-        HashMap<String,Object> map = mongoTemplate.findOne(query, HashMap.class, MONGODB_CAR_IMAGE_COLLECTION_NAME);
-        return  (map == null) ?
-                NetMessage.failNetMessage("","没有您需要的信息！！"):
-                NetMessage.successNetMessage("",map);
+//        Query query = new Query(Criteria.where("_id").in(carid, Integer.parseInt(carid)));
+//        HashMap<String,Object> map = mongoTemplate.findOne(query, HashMap.class, MONGODB_CAR_IMAGE_COLLECTION_NAME);
+//        return  (map == null) ?
+//                NetMessage.failNetMessage("","没有您需要的信息！！"):
+//                NetMessage.successNetMessage("",map);
+        return null;
     }
 
     @Override
     public NetMessage upImage(String carid, MultipartFile... file) {
         if (file == null || file.length <= 0) return NetMessage.failNetMessage("","请上传汽车图片！！");
-        NetMessage info = check(carid);
-        if (info.getStatus() == NetMessage.FAIl) return info;
-        HashMap<String,Object> content = (HashMap<String,Object>)info.getContent();
+        NetMessage info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("上传失败，没有对应汽车信息！！");
+//        info = check(carid);
+        HashMap<String,Object> content = (HashMap)info.getContent();
+        HashMap<String,Object> basic = (HashMap)content.get("basic");
         List<String> filePaths = new ArrayList<>();
         List<String> fileNames = new ArrayList<>();
         for (int i =0; i<file.length; i++){
@@ -328,11 +325,11 @@ public class CarServiceImpl implements CarService {
             }
 
         }
-        content.put("images",fileNames);
-        mongoTemplate.save(content,MONGODB_CAR_IMAGE_COLLECTION_NAME);
+        basic.put("images",fileNames);
+        mongoTemplate.save(content,MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","图片上传成功！！");
     }
-
+    @Deprecated
     private NetMessage check(String carid) {
         NetMessage info = getImages(carid);
         HashMap<String,Object> map = null;
@@ -350,18 +347,22 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public NetMessage saveCarPrice(String data) {
-        HashMap<String, Object> priceObject = ObjectUtils.string2Map(data);
-        String carid = priceObject.get("carid") + "";
-
+    public NetMessage saveCarPrice(String carid,String data) {
         NetMessage info = getInfo(carid);
-        priceObject.put("_id",carid);
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("价钱信息保存失败，没有该汽车信息！！");
+        HashMap<String,Object> content = (HashMap)info.getContent();
+        HashMap<String,Object> basic = (HashMap)content.get("basic");
+
+        HashMap<String, Object> priceObject = ObjectUtils.string2Map(data);
+        basic.put("price",priceObject);
+
         if (info.getStatus() == NetMessage.FAIl) return info;
-        mongoTemplate.save(priceObject, MONGODB_CAR_PRICE_COLLECTION_NAME);
+        mongoTemplate.save(content, MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
+    @Deprecated
     public NetMessage getCarPrice(String carid) {
         Criteria criteria = Criteria.where("_id").in(carid,Integer.parseInt(carid));
         Query query = new Query(criteria);
@@ -372,7 +373,6 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public NetMessage addRentOrder(RentOrder rentOrder) {
-        Optional<Car> byId = carRepository.findById(Integer.parseInt(rentOrder.getCarid()));
         NetMessage info = getInfo(rentOrder.getCarid());
         if (info.getStatus() == NetMessage.FAIl) return info;
 
@@ -434,8 +434,8 @@ public class CarServiceImpl implements CarService {
     private CarBrandRepository carBrandRepository;
     @Autowired
     private CarCommentRepository carCommentRepository;
-    @Autowired
-    private CarRepository carRepository;
+//    @Autowired
+//    private CarRepository carRepository;
     @Autowired
     private AccountService accountService;
     @Autowired

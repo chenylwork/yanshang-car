@@ -30,6 +30,11 @@ public class NetMessage<T> {
         this.status = status;
     }
 
+    public NetMessage setContent(T content) {
+        this.content = content;
+        return this;
+    }
+
     public static <T> NetMessage successNetMessage(String code, T content) {
         return new NetMessage(code,content,SUCCESS);
     }

@@ -16,10 +16,10 @@ import javax.persistence.*;
  **/
 @Data
 @Entity
-@Table(name="t_direction")
+@Table(name="t_shop_address")
 @AllArgsConstructor
 @NoArgsConstructor
-public class Direction {
+public class ShoppingAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer directionid; // 编号

@@ -55,7 +55,7 @@
     $(function () {
         console.log("获取文件");
         // $.get("http://localhost/car/car/details?identity=4",function(data){
-        $.get("http://localhost/car/car/details?identity=6",function(data){
+        $.get("http://localhost/car/car/details?carid=975de3ff8ff59230baec811d4b5b7498",function(data){
             if (data.status == 0) {
                 alert("没有您要的数据！！");
                 return;
@@ -81,7 +81,7 @@
             // 初始化配置详细信息
 
             for(i in data) {
-                if(i != "basic") {
+                if(i != "basic" && i != "_id") {
                     // 添加配置头
                     add_head(i);
                     init_tab(data[i]);

@@ -18,7 +18,7 @@ public interface CarService {
 
     String MONGODB_CAR_COLLECTION_NAME = "car";
     String MONGODB_CAR_PRICE_COLLECTION_NAME = "car_price";
-    String MONGODB_CAR_IMAGE_COLLECTION_NAME = "car_image";
+//    String MONGODB_CAR_IMAGE_COLLECTION_NAME = "car_image";
 
     String LABEL_RECOMMEND = "0201"; // 推荐标签
     String LABEL_CALL = "0202"; // 挂靠标签
@@ -35,6 +35,7 @@ public interface CarService {
      * @param brand 汽车品牌，
      * @return
      */
+    @Deprecated
     NetMessage getRecommend(String brand);
 
     /**
@@ -84,7 +85,7 @@ public interface CarService {
      * @param data
      * @return
      */
-    NetMessage getDetails(HashMap<String,String> data);
+    NetMessage getDetails(Map<String,String> data);
 
     /**
      * 添加汽车品牌信息
@@ -130,6 +131,7 @@ public interface CarService {
      * @param carid
      * @return
      */
+    @Deprecated
     NetMessage getImages(String carid);
 
     /**
@@ -141,16 +143,18 @@ public interface CarService {
     NetMessage upImage(String carid,MultipartFile... file);
     /**
      * 录入汽车价钱信息
+     * @param carid 汽车编号
      * @param data json数据
      * @return
      */
-    NetMessage saveCarPrice(String data);
+    NetMessage saveCarPrice(String carid,String data);
 
     /**
      * 获取汽车价钱信息
      * @param carid 汽车编号
      * @return
      */
+    @Deprecated
     NetMessage getCarPrice(String carid);
 
     /**

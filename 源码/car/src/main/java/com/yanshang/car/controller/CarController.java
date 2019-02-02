@@ -186,8 +186,8 @@ public class CarController {
      * @return
      */
     @RequestMapping("/price/save")
-    public NetMessage savePrice(String data) {
-        return carService.saveCarPrice(data);
+    public NetMessage savePrice(String carid,String data) {
+        return carService.saveCarPrice(carid,data);
     }
     /**
      * 获取汽车价钱信息

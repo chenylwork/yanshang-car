@@ -8,7 +8,7 @@ import javax.persistence.*;
 
 /*
  * @ClassName Commodity
- * @Description 作用描述
+ * @Description 商品信息
  * @Author 陈彦磊
  * @Date 2019/1/16- 16:52
  * @Version 1.0
@@ -18,7 +18,7 @@ import javax.persistence.*;
 @Table(name="t_commodity")
 @AllArgsConstructor
 @NoArgsConstructor
-public class Commodity {
+public class Goods {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer commodityid; // 商品编号
