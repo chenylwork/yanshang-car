@@ -30,6 +30,29 @@ public class FileUtil {
     }
 
     /**
+     * 删除文件夹，递归删除
+     * @param dirFile
+     * @return
+     */
+    public static boolean deleteFile(File dirFile) {
+        // 如果dir对应的文件不存在，则退出
+        if (!dirFile.exists()) {
+            return false;
+        }
+
+        if (dirFile.isFile()) {
+            return dirFile.delete();
+        } else {
+
+            for (File file : dirFile.listFiles()) {
+                deleteFile(file);
+            }
+        }
+
+        return dirFile.delete();
+    }
+
+    /**
      * 删除文件
      * @param path
      */
@@ -65,7 +88,17 @@ public class FileUtil {
         }
         return true;
     }
-
+    /**
+     * 判断文件是否是图片
+     * @param files
+     * @return
+     */
+    public static boolean isImage(MultipartFile... files){
+        for(MultipartFile file : files) {
+            if (!isImage(file)) return false;
+        }
+        return true;
+    }
     /**
      * 获取文件名称
      * @param file

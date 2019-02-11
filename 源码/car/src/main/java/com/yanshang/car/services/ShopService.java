@@ -1,13 +1,11 @@
 package com.yanshang.car.services;
 
-import com.yanshang.car.bean.Goods;
 import com.yanshang.car.bean.ShoppingAddress;
 import com.yanshang.car.bean.ShoppingCart;
+import com.yanshang.car.bean.ShoppingOrder;
 import com.yanshang.car.commons.NetMessage;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /*
@@ -19,15 +17,22 @@ import java.util.Map;
  **/
  public interface ShopService {
      String GOODS_COLLECTIONS_NAME = "goods";
+     String GOODS_KEYWORD_KEY = "goods_keyword";
+    /**
+     * 商品库存数
+     */
+    String GOODS_COUNT_KEY = "count";
     /**
      * 保存商品信息
      * @param goods
      * @return
      */
-     NetMessage saveGoods(String goods);
+     NetMessage saveGoods(Map<String,Object> goods, MultipartFile... files);
 
     /**
      * 获取商品信息
+     * goodsid 商品编号
+     * name 商品名称
      * @param data
      * @return
      */
@@ -37,7 +42,13 @@ import java.util.Map;
      * 获取查询关键字
      * @return
      */
-     NetMessage keyword() ;
+     NetMessage getKeyword(String keyword);
+
+    /**
+     * 新加关键字
+     * @return
+     */
+     NetMessage saveKeyword(String keyword);
 
     /**
      * 保存购物车信息
@@ -65,5 +76,19 @@ import java.util.Map;
      * @param data
      * @return
      */
-     NetMessage getShoppingAddress(Map<String,String> data) ;
+     NetMessage getShoppingAddress(Map<String,String> data);
+
+    /**
+     * 保存订单
+     * @param order
+     * @return
+     */
+     NetMessage saveOrder(ShoppingOrder order);
+
+    /**
+     * 获取商品订单
+     * @param data
+     * @return
+     */
+    NetMessage getOrder(Map<String,String> data);
 }

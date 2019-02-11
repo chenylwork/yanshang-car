@@ -22,7 +22,7 @@ public class ShoppingCart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer cartid; // 编号
-    private String commodityid; // 商品编号
+    private String goodsid; // 商品编号
     private int size; // 商品个数
     private String accountid; // 用户编号
     private String time; // 加入时间

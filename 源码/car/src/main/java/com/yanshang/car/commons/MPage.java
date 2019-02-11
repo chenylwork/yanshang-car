@@ -24,4 +24,5 @@ public class MPage<T> {
         this.no = no;
         this.length = length;
     }
+
 }

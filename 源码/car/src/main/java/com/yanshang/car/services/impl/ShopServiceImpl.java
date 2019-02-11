@@ -1,19 +1,32 @@
 package com.yanshang.car.services.impl;
 
-import com.yanshang.car.bean.Goods;
 import com.yanshang.car.bean.ShoppingAddress;
 import com.yanshang.car.bean.ShoppingCart;
+import com.yanshang.car.bean.ShoppingOrder;
 import com.yanshang.car.commons.CharacterUtil;
+import com.yanshang.car.commons.FileUtil;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
-import com.yanshang.car.commons.ObjectUtils;
+import com.yanshang.car.repositories.ShoppingAddressRepository;
+import com.yanshang.car.repositories.ShoppingCartRepository;
+import com.yanshang.car.repositories.ShoppingOrderRepository;
+import com.yanshang.car.services.AccountService;
 import com.yanshang.car.services.ShopService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /*
  * @ClassName ShopServiceImpl
@@ -24,10 +37,21 @@ import java.util.Map;
  **/
 @Service("shopService")
 public class ShopServiceImpl implements ShopService {
+    @Value("${basic.project.img.home}")
+    private String IMG_PATH;
+    private String GOODS_PATH = "/goods";
 
+    /**
+     * 商品库存数 {@link ShopService#GOODS_COUNT_KEY}
+     * 商品名称 name
+     * 商品价格 price
+     * 商品颜色 colors
+     * 商品图片 images
+     * @param map
+     * @return
+     */
     @Override
-    public NetMessage saveGoods(String goods) {
-        HashMap<String, Object> map = ObjectUtils.string2Map(goods);
+    public NetMessage saveGoods(Map<String,Object> map, MultipartFile... files) {
         String id = (String)map.get("_id");
         if (CharacterUtil.isEmpty(id)) { // 添加
             String name = (String) map.get("name");
@@ -35,7 +59,27 @@ public class ShopServiceImpl implements ShopService {
             id = DigestUtils.md5Hex(name);
             map.put("_id",id);
         }
-        mongoTemplate.save(map);
+        boolean isImage = FileUtil.isImage(files);
+        if (!isImage) return NetMessage.failNetMessage("","请选择图片上传！！");
+
+        String dirPath = IMG_PATH + GOODS_PATH+"/"+id;
+        // 删掉旧图片
+        FileUtil.deleteFile(FileUtil.createFile(dirPath));
+
+        List<String> images = new ArrayList<>();
+        // 保存新图片
+        for(int i=0; i<files.length; i++) {
+            String fileName = FileUtil.getFileName(files[i], id + i);
+            File file = FileUtil.createFile(dirPath+ "/" + fileName);
+            images.add(GOODS_PATH+"/"+id+"/"+fileName);
+            try {
+                files[i].transferTo(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        map.put("images",images);
+        mongoTemplate.save(map,GOODS_COLLECTIONS_NAME);
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
@@ -44,34 +88,154 @@ public class ShopServiceImpl implements ShopService {
         int no = 0;
         int size = 10;
         String goodsis = data.get("goodsid");
-        if (CharacterUtil.isEmpty(goodsis))
-        return null;
+        if (!CharacterUtil.isEmpty(goodsis)){
+            HashMap<String,Object> goods = mongoTemplate.findById(goodsis, HashMap.class,GOODS_COLLECTIONS_NAME);
+            if (goods != null) {
+                return NetMessage.successNetMessage("",goods);
+            }
+        }
+        Query query = new Query();
+        long count = mongoTemplate.count(query, Object.class, GOODS_COLLECTIONS_NAME);
+        long skip = size*no;
+        query.skip(skip).limit(size);
+        List<Object> objectList = mongoTemplate.find(query, Object.class, GOODS_COLLECTIONS_NAME);
+        if (objectList == null || objectList.isEmpty())
+            return NetMessage.failNetMessage("","没有您需要的信息！！");
+        MPage<Object> page = new MPage<>(no,size,count,objectList);
+        return NetMessage.successNetMessage("",page);
+    }
+
+    private NetMessage goodsIsExists(String goodsid) {
+        Map<String,String> map = new HashMap<>();
+        map.put("goodsid",goodsid);
+        return getGoods(map);
     }
 
     @Override
-    public NetMessage keyword() {
-        return null;
+    public NetMessage getKeyword(String keyword) {
+        if (CharacterUtil.isEmpty(keyword)) return NetMessage.failNetMessage("","关键字为空");
+        Set<ZSetOperations.TypedTuple<String>> zset = redisTemplate.opsForZSet().reverseRangeWithScores(GOODS_KEYWORD_KEY, 0, -1);
+        Map<String,String> map = new LinkedHashMap<>();
+        zset.forEach(data -> {
+            String value = data.getValue();
+            double doubleScore = data.getScore();
+            int score = (int) doubleScore;
+            if (value.indexOf(keyword) != -1) map.put(value,score+"");
+        });
+        return NetMessage.successNetMessage("",map);
+    }
+
+    @Override
+    public NetMessage saveKeyword(String keyword) {
+        if (CharacterUtil.isEmpty(keyword)) return NetMessage.failNetMessage("","关键字为空");
+        redisTemplate.opsForZSet().incrementScore(GOODS_KEYWORD_KEY,keyword,1);
+        return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage saveShoppingCart(ShoppingCart shoppingCart) {
-        return null;
+        NetMessage info = accountService.getUser(shoppingCart.getAccountid());
+        if(info.getStatus() == NetMessage.FAIl) return info;
+
+        String goodsid = shoppingCart.getGoodsid();
+        info = goodsIsExists(goodsid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+
+        cartRepository.save(shoppingCart);
+        return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage getShoppingCart(Map<String, String> data) {
-        return null;
+        String cartid = data.get("cartid");
+        if (!CharacterUtil.isEmpty(cartid)) {
+            Optional<ShoppingCart> byId = cartRepository.findById(Integer.parseInt(cartid));
+            if (byId.isPresent()){
+                return NetMessage.successNetMessage("",byId.get());
+            }
+        }
+        String accountid = data.get("accountid");
+        if (!CharacterUtil.isEmpty(accountid)) {
+            List<ShoppingCart> cartList = cartRepository.getByAccountid(accountid);
+            if (cartList != null && !cartList.isEmpty()) {
+                return NetMessage.successNetMessage("",cartList);
+            }
+        }
+        return NetMessage.failNetMessage("","");
     }
 
     @Override
     public NetMessage saveShoppingAddress(ShoppingAddress shoppingAddress) {
-        return null;
+        String accountid = shoppingAddress.getAccountid();
+        NetMessage info = accountService.getUser(accountid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        addressRepository.save(shoppingAddress);
+        return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage getShoppingAddress(Map<String, String> data) {
-        return null;
+        String accountid = data.get("accountid");
+        if (!CharacterUtil.isEmpty(accountid)) {
+            List<ShoppingAddress> addressList = addressRepository.getByAccountid(accountid);
+            if (addressList != null && addressList.isEmpty())
+                return NetMessage.successNetMessage("",addressList);
+        }
+        String addressid = data.get("addressid");
+        if (!CharacterUtil.isEmpty(addressid)) {
+            Optional<ShoppingAddress> byId = addressRepository.findById(Integer.parseInt(addressid));
+            if (byId.isPresent()) return NetMessage.successNetMessage("",byId.get());
+        }
+        return NetMessage.failNetMessage("","没有您需要的信息！！");
     }
+
+    @Override
+    @Transactional
+    public NetMessage saveOrder(ShoppingOrder order) {
+        String accountid = order.getAccountid();
+        NetMessage info = accountService.getUser(accountid);
+        if(info.getStatus() == NetMessage.FAIl) return info;
+
+        String goodsid = order.getGoodsid();
+        info = goodsIsExists(goodsid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        int size = order.getSize();
+        HashMap<String,Object> goods = (HashMap)info.getContent();
+        int count = (Integer)goods.get(ShopService.GOODS_COUNT_KEY);
+        if (count < size) return NetMessage.failNetMessage("","该商品库存不足！！");
+        orderRepository.save(order);
+        goods.put(GOODS_COUNT_KEY,(count-size)+"");
+        saveGoods(goods);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getOrder(Map<String, String> data) {
+        String accountid = data.get("accountid");
+        if (!CharacterUtil.isEmpty(accountid)) {
+            List<ShoppingOrder> orderList = orderRepository.getByAccountid(accountid);
+            if (orderList != null && !orderList.isEmpty())
+                return NetMessage.successNetMessage("",orderList);
+        }
+        String orderid = data.get("orderid");
+        if (CharacterUtil.isEmpty(orderid)) {
+            Optional<ShoppingOrder> byId = orderRepository.findById(Integer.parseInt(orderid));
+            if (byId.isPresent())return NetMessage.successNetMessage("",byId.get());
+        }
+        return NetMessage.failNetMessage("","没有您需要的信息！！");
+    }
+
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private ShoppingCartRepository cartRepository;
+    @Autowired
+    private ShoppingAddressRepository addressRepository;
+    @Autowired
+    private ShoppingOrderRepository orderRepository;
+
 }

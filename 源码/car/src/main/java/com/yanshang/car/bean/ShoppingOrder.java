@@ -22,6 +22,8 @@ public class ShoppingOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderid; // 订单编号
+    private String accountid; // 用户编号
+    private String goodsid; // 商品编号
     private Integer orderCode; // 订单号
     private String createTime; // 创建时间
     private String paymentTime; // 付款时间
@@ -31,6 +33,6 @@ public class ShoppingOrder {
     // {商品编号:商品编号,购买价格:购买价格,购买个数:购买个数},
     // {商品编号:商品编号,购买价格:购买价格,购买个数:购买个数},
     // ,....]
-    private String content;
+    private Integer size;
 
 }
