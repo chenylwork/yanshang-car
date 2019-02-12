@@ -183,4 +183,19 @@ public interface CarService {
      * @return
      */
     NetMessage getTestOrders(TestOrder testOrder);
+
+    /**
+     * 保存关注的汽车
+     * @param carFans
+     * @return
+     */
+    NetMessage saveCarFans(CarFans carFans);
+
+    /**
+     * 获取我的关注车型
+     * @param accountid
+     * @return
+     */
+    NetMessage getCarFans(String accountid);
+
 }

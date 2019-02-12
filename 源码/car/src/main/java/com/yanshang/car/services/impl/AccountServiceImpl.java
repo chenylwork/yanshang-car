@@ -1,17 +1,23 @@
 package com.yanshang.car.services.impl;
 
 import com.yanshang.car.bean.Account;
+import com.yanshang.car.bean.Fans;
+import com.yanshang.car.bean.Idea;
 import com.yanshang.car.commons.CharacterUtil;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.commons.PhoneCodeUtil;
 import com.yanshang.car.repositories.AccountRepository;
+import com.yanshang.car.repositories.FansRepository;
+import com.yanshang.car.repositories.IdeaRepository;
 import com.yanshang.car.services.AccountService;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.List;
 import java.util.Optional;
 
 /*
@@ -24,8 +30,7 @@ import java.util.Optional;
 @Service
 public class AccountServiceImpl implements AccountService {
 
-    @Autowired
-    private AccountRepository accountRepository;
+
 
     @Override
     public NetMessage register(Account account, String code) {
@@ -43,7 +48,12 @@ public class AccountServiceImpl implements AccountService {
         }
         account.setPassword(CharacterUtil.passEncode(account.getPassword()));
         try{
+            // 生成推荐码
+            String referrerCode = redisTemplate.opsForValue().get(REFERRER_CODE_NUM_KEY);
+            if (CharacterUtil.isEmpty(referrerCode)) referrerCode = "0";
+            account.setReferrerCode(CharacterUtil.referrerCode(referrerCode));
             accountRepository.save(account);
+            redisTemplate.opsForValue().increment(REFERRER_CODE_NUM_KEY);
             return NetMessage.successNetMessage("","注册成功！！");
         } catch (DataIntegrityViolationException exception){
             return NetMessage.failNetMessage("","该账户已注册！！");
@@ -116,4 +126,74 @@ public class AccountServiceImpl implements AccountService {
         if (!byId.isPresent()) return NetMessage.failNetMessage("","暂无该用户");
         return NetMessage.successNetMessage("",byId.get());
     }
+
+    @Override
+    public NetMessage saveFans(Fans fans) {
+        String from = fans.getFromuser();
+        String to = fans.getTouser();
+        NetMessage info = getUser(from);
+        if (info.getStatus() == NetMessage.FAIl)
+            return NetMessage.failNetMessage("","被关注的用户不存在！！");
+        info = getUser(to);
+        if (info.getStatus() == NetMessage.FAIl)
+            return NetMessage.failNetMessage("","缺少用户信息！！");
+        fansRepository.save(fans);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getFans(String accountid, String type) {
+        List<Fans> fansList = null;
+        if (FANS_FROM.equals(type)) {
+            fansList = fansRepository.getByFromuser(accountid);
+        }
+        if (FANS_TO.equals(type)) {
+            fansList = fansRepository.getByTouser(accountid);
+        }
+        return (fansList != null && !fansList.isEmpty()) ?
+                NetMessage.successNetMessage("",fansList):
+                NetMessage.failNetMessage("","没有您需要的信息！！");
+    }
+
+    @Override
+    public NetMessage getFansSize(String accountid, String type) {
+        long fansLength = 0L;
+        if (FANS_FROM.equals(type)) {
+            fansLength = fansRepository.countByFromuser(accountid);
+        }
+        if (FANS_TO.equals(type)) {
+            fansLength = fansRepository.countByTouser(accountid);
+        }
+        return NetMessage.successNetMessage("",fansLength);
+    }
+
+    @Override
+    public NetMessage saveIdea(Idea idea) {
+
+        ideaRepository.save(idea);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getIdea(String ideaid) {
+        Object result = null;
+        if (CharacterUtil.isEmpty(ideaid)) {
+            result = ideaRepository.findAll();
+        } else {
+            result = ideaRepository.findById(ideaid);
+        }
+
+        return (result != null)?
+                NetMessage.successNetMessage("",result):
+                NetMessage.failNetMessage("","没有反馈意见！！");
+    }
+
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private FansRepository fansRepository;
+    @Autowired
+    private IdeaRepository ideaRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 }

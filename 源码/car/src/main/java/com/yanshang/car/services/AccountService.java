@@ -1,6 +1,8 @@
 package com.yanshang.car.services;
 
 import com.yanshang.car.bean.Account;
+import com.yanshang.car.bean.Fans;
+import com.yanshang.car.bean.Idea;
 import com.yanshang.car.commons.NetMessage;
 import sun.nio.ch.Net;
 
@@ -12,6 +14,12 @@ import sun.nio.ch.Net;
  * @Version 1.0
  **/
 public interface AccountService {
+    /**
+     * 推荐码存储编号
+     */
+    String REFERRER_CODE_NUM_KEY = "referrer_code_num";
+    String FANS_TO = "1";
+    String FANS_FROM = "2";
     /**
      * 注册账号
      * @param account 注册账户
@@ -66,4 +74,40 @@ public interface AccountService {
      * @return
      */
     NetMessage getUser(String userid);
+
+    /**
+     * 保存粉丝，关注用户
+     * @param fans
+     * @return
+     */
+    NetMessage saveFans(Fans fans);
+
+    /**
+     * 获取粉丝（关注）集合
+     * @param accountid
+     * @return
+     */
+    NetMessage getFans(String accountid,String type);
+
+    /**
+     * 获取粉丝（关注）的个数
+     * @param accountid
+     * @param type
+     * @return
+     */
+    NetMessage getFansSize(String accountid,String type);
+
+    /**
+     * 保存反馈意见
+     * @param idea
+     * @return
+     */
+    NetMessage saveIdea(Idea idea);
+
+    /**
+     * 获取反馈意见
+     * @param ideaid
+     * @return
+     */
+    NetMessage getIdea(String ideaid);
 }

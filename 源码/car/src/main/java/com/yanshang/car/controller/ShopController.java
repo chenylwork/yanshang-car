@@ -1,9 +1,6 @@
 package com.yanshang.car.controller;
 
-import com.yanshang.car.bean.Goods;
-import com.yanshang.car.bean.ShoppingAddress;
-import com.yanshang.car.bean.ShoppingCart;
-import com.yanshang.car.bean.ShoppingOrder;
+import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.ShopService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +122,33 @@ public class ShopController {
     @RequestMapping("/order/get")
     public NetMessage getOrder(@RequestParam Map<String,String> data) {
         return shopService.getOrder(data);
+    }
+
+    /**
+     * 保存积分信息
+     * @param shoppingScore
+     * @return
+     */
+    @RequestMapping("/scope/save")
+    public NetMessage saveScope(ShoppingScore shoppingScore) {
+        return shopService.saveShoppingScore(shoppingScore);
+    }
+
+    @RequestMapping("/signin")
+    public NetMessage signin(ShoppingScore shoppingScore) {
+        shoppingScore.setName("签到");
+        shoppingScore.setScore(5);
+        return shopService.saveShoppingScore(shoppingScore);
+    }
+
+    /**
+     * 获取积分详情
+     * @param accountid
+     * @return
+     */
+    @RequestMapping("/scope/get")
+    public NetMessage getScope(String accountid) {
+        return shopService.getShoppingScore(accountid);
     }
     @Autowired
     private ShopService shopService;

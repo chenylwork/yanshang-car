@@ -426,6 +426,27 @@ public class CarServiceImpl implements CarService {
                 NetMessage.failNetMessage("","没有您需要的信息！！");
     }
 
+    @Override
+    public NetMessage saveCarFans(CarFans carFans) {
+        String accountid = carFans.getAccountid();
+        NetMessage info = accountService.getUser(accountid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        String carid = carFans.getCarid();
+        info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("关注汽车不存在！！");
+
+        carFansRepository.save(carFans);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getCarFans(String accountid) {
+        List<CarFans> carFansList = carFansRepository.getByAccountid(accountid);
+        return (carFansList != null && !carFansList.isEmpty()) ?
+                NetMessage.successNetMessage("",carFansList):
+                NetMessage.failNetMessage("","没有需要的信息！！");
+    }
+
     @Value("${basic.project.img.home}")
     private String IMG_PATH;
     private String img_brand_path = "/brands";
@@ -446,6 +467,8 @@ public class CarServiceImpl implements CarService {
     private CarRentOrderRepository carRentOrderRepository;
     @Autowired
     private CarTestOrderRepository carTestOrderRepository;
+    @Autowired
+    private CarFansRepository carFansRepository;
     @Autowired
     private ServerService serverService;
 }

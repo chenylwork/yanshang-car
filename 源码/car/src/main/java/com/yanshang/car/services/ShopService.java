@@ -3,6 +3,7 @@ package com.yanshang.car.services;
 import com.yanshang.car.bean.ShoppingAddress;
 import com.yanshang.car.bean.ShoppingCart;
 import com.yanshang.car.bean.ShoppingOrder;
+import com.yanshang.car.bean.ShoppingScore;
 import com.yanshang.car.commons.NetMessage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +22,7 @@ import java.util.Map;
     /**
      * 商品库存数
      */
-    String GOODS_COUNT_KEY = "count";
+    String GOODS_COUNT_KEY = "size";
     /**
      * 保存商品信息
      * @param goods
@@ -91,4 +92,19 @@ import java.util.Map;
      * @return
      */
     NetMessage getOrder(Map<String,String> data);
+
+    /**
+     * 保存商品积分
+     * @param shoppingScore
+     * @return
+     */
+    NetMessage saveShoppingScore(ShoppingScore shoppingScore);
+
+    /**
+     *
+     * @param accountid 用户编号
+     * @return
+     */
+    NetMessage getShoppingScore(String accountid);
+
 }

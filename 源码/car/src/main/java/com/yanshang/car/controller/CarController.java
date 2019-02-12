@@ -278,6 +278,26 @@ public class CarController {
         return carService.saveTestOrder(order);
     }
 
+    /**
+     * 保存关注车型
+     * @param carFans
+     * @return
+     */
+    @RequestMapping("/fans/save")
+    public NetMessage saveCarFans(CarFans carFans){
+        return carService.saveCarFans(carFans);
+    }
+
+    /**
+     * 获取关注的车型
+     * @param accountid
+     * @return
+     */
+    @RequestMapping("/fans/get")
+    public NetMessage getCarFans(String accountid){
+        return carService.getCarFans(accountid);
+    }
+
     /******************************************************************/
     /******************************************************************/
     /******************************************************************/

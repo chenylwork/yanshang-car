@@ -25,6 +25,9 @@ public class Account {
     private Integer id;
     private String phone; // 手机号
     private String password; // 密码
+    private String name; // 名称
+    private String head; // 头像
+    private String referrerCode; // 推荐人码
     private String referrerName; // 推荐人姓名
     private String referrerPhone; // 推荐人电话
 

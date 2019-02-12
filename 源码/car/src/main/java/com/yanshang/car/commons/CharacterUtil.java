@@ -17,8 +17,29 @@ import java.util.regex.Pattern;
  **/
 public class CharacterUtil {
 
+    private int referrerCodeLength = 8;
 
 
+    /**
+     * 生成订单编号
+     * @return
+     */
+    public static String orderCode() {
+        return System.currentTimeMillis()+"";
+    }
+
+    /**
+     * 生成推荐码
+     * @param num
+     * @return
+     */
+    public static String referrerCode(String num) {
+        int supLength = 8;
+        StringBuilder stringBuilder = new StringBuilder();
+        if (!CharacterUtil.isEmpty(num)) supLength = supLength - num.length();
+        for (int i=0; i<supLength; i++) stringBuilder.append("0");
+        return stringBuilder.append(num).toString();
+    }
     /**
      * 检验手机号格式
      * @param phone
