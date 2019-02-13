@@ -1,15 +1,14 @@
 package com.yanshang.car.services.impl;
 
-import com.yanshang.car.bean.Account;
-import com.yanshang.car.bean.Fans;
-import com.yanshang.car.bean.Idea;
+import com.yanshang.car.bean.*;
+import com.yanshang.car.bean.view.FansView;
+import com.yanshang.car.bean.view.RecommendView;
 import com.yanshang.car.commons.CharacterUtil;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.commons.PhoneCodeUtil;
-import com.yanshang.car.repositories.AccountRepository;
-import com.yanshang.car.repositories.FansRepository;
-import com.yanshang.car.repositories.IdeaRepository;
+import com.yanshang.car.repositories.*;
 import com.yanshang.car.services.AccountService;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,7 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /*
  * @ClassName AccountServiceImpl
@@ -51,7 +52,7 @@ public class AccountServiceImpl implements AccountService {
             // 生成推荐码
             String referrerCode = redisTemplate.opsForValue().get(REFERRER_CODE_NUM_KEY);
             if (CharacterUtil.isEmpty(referrerCode)) referrerCode = "0";
-            account.setReferrerCode(CharacterUtil.referrerCode(referrerCode));
+            account.setCode(CharacterUtil.referrerCode(referrerCode));
             accountRepository.save(account);
             redisTemplate.opsForValue().increment(REFERRER_CODE_NUM_KEY);
             return NetMessage.successNetMessage("","注册成功！！");
@@ -68,8 +69,8 @@ public class AccountServiceImpl implements AccountService {
         if (phone == null || phone.equals("")) return NetMessage.failNetMessage("","需要用户手机号参数！！");
         Account account = accountRepository.getByPhone(phone);
         if (account != null || account.getId() == null) return NetMessage.failNetMessage("","该账号不存在！！");
-        account.setReferrerName(name);
-        account.setReferrerPhone(referrerPhone);
+//        account.setReferrerName(name);
+//        account.setReferrerPhone(referrerPhone);
         account = accountRepository.save(account);
         try{
             accountRepository.save(account);
@@ -137,18 +138,22 @@ public class AccountServiceImpl implements AccountService {
         info = getUser(to);
         if (info.getStatus() == NetMessage.FAIl)
             return NetMessage.failNetMessage("","缺少用户信息！！");
+
+        if (fansRepository.getByFromuserAndTouser(from,to) != null){
+            return NetMessage.failNetMessage("","已关注该用户！！");
+        }
         fansRepository.save(fans);
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage getFans(String accountid, String type) {
-        List<Fans> fansList = null;
+        List<FansView> fansList = null;
         if (FANS_FROM.equals(type)) {
-            fansList = fansRepository.getByFromuser(accountid);
+            fansList = fansViewRepository.getByFromuser(accountid);
         }
         if (FANS_TO.equals(type)) {
-            fansList = fansRepository.getByTouser(accountid);
+            fansList = fansViewRepository.getByTouser(accountid);
         }
         return (fansList != null && !fansList.isEmpty()) ?
                 NetMessage.successNetMessage("",fansList):
@@ -169,7 +174,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public NetMessage saveIdea(Idea idea) {
-
+        idea.setIdeaid(UUID.randomUUID().toString().replace("-","").toLowerCase());
         ideaRepository.save(idea);
         return NetMessage.successNetMessage("","保存成功！！");
     }
@@ -182,18 +187,64 @@ public class AccountServiceImpl implements AccountService {
         } else {
             result = ideaRepository.findById(ideaid);
         }
-
+        System.out.println(result);
         return (result != null)?
                 NetMessage.successNetMessage("",result):
                 NetMessage.failNetMessage("","没有反馈意见！！");
     }
+
+    @Override
+    public NetMessage saveRecommend(Recommend recommend) {
+        String fromuser = recommend.getFromuser();
+        String touser = recommend.getTouser();
+
+        NetMessage info = getUser(fromuser);
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("被推荐人不存在！！");
+
+        info = getUser(touser);
+        if (info.getStatus() == NetMessage.FAIl) {
+            return info.setContent("推荐人不存在！！");
+        } else {
+            Account account = (Account) info.getContent();
+            String referrerCode = account.getCode();
+            String code = recommend.getCode();
+            if (!referrerCode.equals(code))
+                return NetMessage.failNetMessage("","推荐码错误！！");
+        }
+        recommendRepository.save(recommend);
+        return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage getRecommend(Map<String, String> data) {
+        List<RecommendView> recommendViewList = null;
+        if (data.containsKey("to")) {
+            recommendViewList = recommendViewRepository.getByTouser(data.get("to"));
+        }
+        if (data.containsKey("from")) {
+            recommendViewList = recommendViewRepository.getByFromuser(data.get("from"));
+        }
+        if (data == null || data.isEmpty())
+            return NetMessage.failNetMessage("","缺少请求参数！！");
+        return (recommendViewList != null && !recommendViewList.isEmpty()) ?
+                NetMessage.successNetMessage("",recommendViewList):
+                NetMessage.failNetMessage("","没有需要的信息！！");
+    }
+
+
 
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private FansRepository fansRepository;
     @Autowired
+    private FansViewRepository fansViewRepository;
+    @Autowired
     private IdeaRepository ideaRepository;
+    @Autowired
+    private RecommendRepository recommendRepository;
+    @Autowired
+    private RecommendViewRepository recommendViewRepository;
     @Autowired
     private StringRedisTemplate redisTemplate;
 }

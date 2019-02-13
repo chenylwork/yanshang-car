@@ -27,6 +27,8 @@ public class MainTest {
 //        385f5f004e343c6201061a8cd918d677
 
         System.out.println(DigestUtils.md5Hex("开机键事不关己"));
+        System.out.println(CharacterUtil.dataTime());
+
     }
     public static void check(Integer a,Integer b) {
         a = 100;

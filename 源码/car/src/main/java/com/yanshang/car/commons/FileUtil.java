@@ -113,6 +113,9 @@ public class FileUtil {
         String fileName = name+suffix;
         return fileName;
     }
+    public static String getFileName(MultipartFile file){
+        return getFileName(file,"");
+    }
 
     /**
      * 判断两个文件是否相同

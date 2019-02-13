@@ -60,6 +60,7 @@ public class AccountController {
      * @param name 推荐人电话
      * @return
      */
+    @Deprecated
     @RequestMapping("/referrer")
     public NetMessage initReferrer(String phone,String name,String referrerPhone) {
         return accountService.referrer(phone, name, referrerPhone);

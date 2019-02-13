@@ -23,6 +23,13 @@ public interface FansRepository extends JpaRepositoryImplementation<Fans,Integer
     List<Fans> getByFromuser(String fromuser);
 
     /**
+     * 根据关注者和被关注着确定一个关系
+     * @param fromuser
+     * @param touser
+     * @return
+     */
+    Fans getByFromuserAndTouser(String fromuser,String touser);
+    /**
      * 获取我的关注的列表
      * @param touser
      * @return

@@ -3,6 +3,7 @@ package com.yanshang.car;
 import com.yanshang.car.bean.Car;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.commons.ObjectUtils;
+import com.yanshang.car.config.ValueBean;
 import com.yanshang.car.dao.MongodbDao;
 import com.yanshang.car.repositories.CarRepository;
 import com.yanshang.car.services.CarService;
@@ -70,6 +71,10 @@ public class CarApplicationTests {
         System.out.println("输出的结果开始");
         System.out.println(car);
         System.out.println("输出的结果结束");
+    }
+    @Test
+    public void say() {
+	    System.out.println(ValueBean.IMG_PATH);
     }
 
 

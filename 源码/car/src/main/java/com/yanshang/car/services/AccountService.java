@@ -1,10 +1,10 @@
 package com.yanshang.car.services;
 
-import com.yanshang.car.bean.Account;
-import com.yanshang.car.bean.Fans;
-import com.yanshang.car.bean.Idea;
+import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.NetMessage;
 import sun.nio.ch.Net;
+
+import java.util.Map;
 
 /*
  * @ClassName AccountService
@@ -110,4 +110,20 @@ public interface AccountService {
      * @return
      */
     NetMessage getIdea(String ideaid);
+
+    /**
+     * 保存推荐人关系
+     * @param recommend
+     * @return
+     */
+    NetMessage saveRecommend(Recommend recommend);
+
+    /**
+     * 获取推荐人关系信息
+     * @param data
+     * @return
+     */
+    NetMessage getRecommend(Map<String,String> data);
+
+
 }
