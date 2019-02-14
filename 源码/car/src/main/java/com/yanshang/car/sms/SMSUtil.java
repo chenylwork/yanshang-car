@@ -9,7 +9,10 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +37,7 @@ import java.util.TreeMap;
 @Component
 public class SMSUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(SMSUtil.class);
     private static StringRedisTemplate redisTemplate;
 
     @Autowired
@@ -41,7 +45,7 @@ public class SMSUtil {
         SMSUtil.redisTemplate = redisTemplate;
     }
 
-    private static final String SMS_KEY = DigestUtils.sha512Hex("");
+    private static final String SMS_KEY = DigestUtils.sha512Hex("sms_sign");
 
     /**
      * 发送短信
@@ -51,26 +55,46 @@ public class SMSUtil {
      * @return
      */
     public static NetMessage send(String content, String phone) {
-        String sign = getSign();
+
         ObjectMapper objectMapper = new ObjectMapper();
         // 请求体
         Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("username", "ymkj");
-        requestBody.put("password", "d93a5def7511da3d0f2d171d9c344e91");
+        requestBody.put("username", username);
+        requestBody.put("password", MD5Util.md5Crypt(password));
         requestBody.put("content", content);
-        requestBody.put("sign", sign);
-//        requestBody.put("sendTime",sign);
         requestBody.put("phone", phone);
+
+
+        Map<String, Object> requestHead = new HashMap<>();
+        requestHead.put("appid",appid);
+        requestHead.put("apiver",apiver);
+        String timestamp = System.currentTimeMillis()+"";
+        requestHead.put("timestamp",timestamp);
+        String nz = "0";
+        requestHead.put("nz",nz);
+        String crypt = "0";
+        requestHead.put("crypt",crypt);
+
+        String sign = SignUtil.getSign(appKey, requestBody, requestHead);
+        requestBody.put("sign", sign);
+
         HttpClient httpClient = new HttpClient();
         PostMethod method = new PostMethod(SEND_URL);
+        method.addRequestHeader("appid",appid);
+        method.addRequestHeader("apiver",apiver);
+        method.addRequestHeader("timestamp",System.currentTimeMillis()+"");
+        method.addRequestHeader("sign",sign);
+        method.addRequestHeader("nz",nz);
+        method.addRequestHeader("crypt",crypt);
         try {
             String requestContent = objectMapper.writeValueAsString(requestBody);
             String charset = "UTF-8";
             String contentType = "application/json";
             method.setRequestEntity(new StringRequestEntity(requestContent, contentType, charset));
             int code = httpClient.executeMethod(method);
+            String responseBody = method.getResponseBodyAsString();
+            logger.info(responseBody);
             if (code == 200) {
-                String responseBody = method.getResponseBodyAsString();
                 HashMap<String, Object> hashMap = objectMapper.readValue(responseBody, HashMap.class);
                 int status = (Integer) hashMap.get("status");
                 if (90001 == status) {
@@ -88,13 +112,24 @@ public class SMSUtil {
     }
 
     public static NetMessage trust() {
-        String sign = getSign();
+        Map<String, Object> requestHead = new HashMap<>();
+        requestHead.put("appid",appid);
+        requestHead.put("apiver",apiver);
+        String timestamp = System.currentTimeMillis()+"";
+        requestHead.put("timestamp",timestamp);
+        String nz = "0";
+        requestHead.put("nz",nz);
+        String crypt = "0";
+        requestHead.put("crypt",crypt);
+
+
+
         HttpClient httpClient = new HttpClient();
         PostMethod postMethod = new PostMethod(SERVER_URL);
         postMethod.addRequestHeader("appid",appid);
         postMethod.addRequestHeader("apiver",apiver);
         postMethod.addRequestHeader("timestamp",System.currentTimeMillis()+"");
-        postMethod.addRequestHeader("sign",sign);
+//        postMethod.addRequestHeader("sign",sign);
         postMethod.addRequestHeader("nz","0");
         postMethod.addRequestHeader("crypt","0");
 //        postMethod.addRequestHeader("content-type","application/json");
@@ -118,54 +153,50 @@ public class SMSUtil {
 
     }
 
-    private static String getSign() {
-        String sign = redisTemplate.opsForValue().get(SMS_KEY);
-        if (sign == null || "".equals(sign) || "null".equals(sign)) {
-            //假设接口请求头参数如下
-            HashMap<String, String> headers = new HashMap<String, String>();
-            headers.put("timestamp", System.currentTimeMillis() + "");
-//        0:HTTP Body内容未压缩
-//        1:HTTP Body内容通过GZIP方式压缩
-            headers.put("nz", "0");
-//        0: HTTP Body内容未加密
-//        3:HTTP Body内容AES128加密，密钥为appSecret的前16bytes
-//        4: HTTP Body 内容AES256加密，密钥为appSecret
-            headers.put("crypt", "0");
-            headers.put("apiver", "101");
-            headers.put("sign", "b9bf825d8c99ffe1216e24b61a9a8b41");
+    private static String getSign(Map<String,String> requestBody,Map<String, Object> requestHead) {
+//        String sign = redisTemplate.opsForValue().get(SMS_KEY);
+        String sign = SignUtil.getSign(appKey, requestBody, requestHead);
 
-            //假设请求内容如下
-            TestBean testBean = new TestBean();
-            testBean.setEntId("0");
-            testBean.setId("10000");
-            testBean.setTestArray(new ArrayList<>());
-
-            TreeMap<String, Object> treeMap = new TreeMap<>();
-            // treeMap中添加appid,apiver
-            treeMap.put("appid", appid);
-            treeMap.put("apiver", apiver);
-
-
-            //添加请求头中的参数(sign属性除外)
-            treeMap.put("timestamp", headers.get("timestamp"));
-            treeMap.put("crypt", headers.get("crypt"));
-            treeMap.put("nz", headers.get("nz"));
-
-            //对象、集合不参与签名 去除body中的对象
-            Map<String, Object> bodyMap = null;
-            try {
-                bodyMap = transBean2Map(testBean);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //添加请求内容
-            treeMap.putAll(bodyMap);
-            //根据Treemap及signKey 生成签名
-            String keyValues = SignUtil.treeMapToString(treeMap, signKey);
-            sign = MD5Util.md5Crypt(keyValues);
-            redisTemplate.opsForValue().set(SMS_KEY, sign);
-        }
-        System.out.println("sign:" + sign);
+//        if (sign == null || "".equals(sign) || "null".equals(sign)) {
+//            //假设接口请求头参数如下
+//            HashMap<String, String> headers = new HashMap<String, String>();
+//            headers.put("appid", appid);
+//            headers.put("apiver", "101");
+//            headers.put("timestamp", System.currentTimeMillis() + "");
+//            headers.put("nz", "0");
+//            headers.put("crypt", "0");
+//            headers.put("sign", "b9bf825d8c99ffe1216e24b61a9a8b41");
+//
+//            //假设请求内容如下
+//            TestBean testBean = new TestBean();
+//            testBean.setEntId("0");
+//            testBean.setId("10000");
+//            testBean.setTestArray(new ArrayList<>());
+//
+//            TreeMap<String, Object> treeMap = new TreeMap<>();
+//            // treeMap中添加appid,apiver
+//            treeMap.put("appid", appid);
+//            treeMap.put("apiver", apiver);
+//            //添加请求头中的参数(sign属性除外)
+//            treeMap.put("timestamp", headers.get("timestamp"));
+//            treeMap.put("crypt", headers.get("crypt"));
+//            treeMap.put("nz", headers.get("nz"));
+//
+//            //对象、集合不参与签名 去除body中的对象
+//            Map<String, Object> bodyMap = null;
+//            try {
+//                bodyMap = transBean2Map(testBean);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            //添加请求内容
+//            treeMap.putAll(bodyMap);
+//            //根据Treemap及signKey 生成签名
+//            String keyValues = SignUtil.treeMapToString(treeMap, signKey);
+//            sign = MD5Util.md5Crypt(keyValues);
+//            redisTemplate.opsForValue().set(SMS_KEY, sign);
+//        }
+//        System.out.println("sign:" + sign);
         return sign;
     }
 
@@ -187,6 +218,19 @@ public class SMSUtil {
             }
         }
         return map;
+    }
+
+    private static String username;
+    private static String password;
+
+    @Value("${sms.username}")
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @Value("${sms.pass}")
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     private final static String SERVER_URL = "https://www.020ymkj.com/sendSms/";

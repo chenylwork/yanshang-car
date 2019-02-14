@@ -4,6 +4,8 @@ import com.yanshang.car.bean.News;
 import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /*
  * @ClassName NewsRepository
  * @Description 发现品牌数据操作
@@ -13,4 +15,11 @@ import org.springframework.stereotype.Repository;
  **/
 @Repository
 public interface NewsRepository  extends JpaRepositoryImplementation<News,Integer>{
+
+    /**
+     * 根据用户编号获取新闻
+     * @param userid
+     * @return
+     */
+    List<News> getByUserid(String userid);
 }

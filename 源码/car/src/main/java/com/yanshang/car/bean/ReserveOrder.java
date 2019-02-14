@@ -15,13 +15,14 @@ import javax.persistence.*;
  **/
 @Data
 @Entity
-@Table(name="t_Reserve")
+@Table(name="t_reserve_order")
 @AllArgsConstructor
 @NoArgsConstructor
-public class Reserve {
+public class ReserveOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reserveid; // 编号
+    private String accountid; // 用户编号
     private String customer; // 客户名称
     private String phone; // 客户名称
     private String address; // 预约地址

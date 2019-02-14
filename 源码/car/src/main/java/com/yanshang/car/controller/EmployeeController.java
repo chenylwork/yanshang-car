@@ -1,7 +1,8 @@
 package com.yanshang.car.controller;
 
 import com.yanshang.car.bean.Employee;
-import com.yanshang.car.bean.Reserve;
+import com.yanshang.car.bean.ReserveOrder;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +34,24 @@ public class EmployeeController {
     }
 
     /**
-     * 预约上门服务
+     * 保存上门服务订单
      * @param reserve 预约信息对象
      * @return
      */
-    @RequestMapping("/reserve")
-    public NetMessage reserve(Reserve reserve) {
-        return null;
+    @RequestMapping("/reserve/save")
+    public NetMessage saveReserve(ReserveOrder reserve) {
+        return employeeService.saveReserve(reserve);
     }
 
+    /**
+     * 获取上门服务订单信息
+     * @param reserve
+     * @return
+     */
+    @RequestMapping("/reserve/get")
+    public NetMessage getReserve(ReserveOrder reserve,MPage<ReserveOrder> page) {
+        return employeeService.getReserve(reserve,page);
+    }
     @Autowired
     private EmployeeService employeeService;
 

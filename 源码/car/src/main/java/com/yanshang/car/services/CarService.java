@@ -1,6 +1,7 @@
 package com.yanshang.car.services;
 
 import com.yanshang.car.bean.*;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -144,10 +145,10 @@ public interface CarService {
     /**
      * 录入汽车价钱信息
      * @param carid 汽车编号
-     * @param data json数据
+     * @param data 汽车价钱信息
      * @return
      */
-    NetMessage saveCarPrice(String carid,String data);
+    NetMessage saveCarPrice(String carid,Map<String,String> data);
 
     /**
      * 获取汽车价钱信息
@@ -157,6 +158,19 @@ public interface CarService {
     @Deprecated
     NetMessage getCarPrice(String carid);
 
+    /**
+     * 保存汽车购车订单
+     * @param carOrder
+     * @return
+     */
+    NetMessage saveCarOrder(CarOrder carOrder);
+
+    /**
+     * 获取汽车购车订单
+     * @param carOrder
+     * @return
+     */
+    NetMessage getCarOrder(CarOrder carOrder,MPage<CarOrder> page);
     /**
      * 添加租车订单
      * @param rentOrder
@@ -197,5 +211,4 @@ public interface CarService {
      * @return
      */
     NetMessage getCarFans(String accountid);
-
 }

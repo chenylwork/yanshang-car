@@ -2,6 +2,7 @@ package com.yanshang.car;
 
 import com.yanshang.car.commons.BaseDao;
 import com.yanshang.car.commons.CharacterUtil;
+import com.yanshang.car.util.SnowFlake;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.BufferedReader;
@@ -30,14 +31,26 @@ public class MainTest {
         System.out.println(CharacterUtil.dataTime());
 
     }
-    public static void check(Integer a,Integer b) {
+
+    public void n() {
+        SnowFlake snowFlake = new SnowFlake(2, 3);
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000000; i++) {
+            System.out.println(snowFlake.nextId());
+        }
+        System.out.println(System.currentTimeMillis() - start);
+    }
+
+    public static void check(Integer a, Integer b) {
         a = 100;
         b = 200;
     }
+
     public static void createDatabase() {
         boolean database = BaseDao.createDatabase("car", "localhost", "root", "root");
         System.out.println(database);
     }
+
     public static void time() {
         System.out.println(CharacterUtil.dataTime());
         System.out.println(CharacterUtil.year());
@@ -48,9 +61,10 @@ public class MainTest {
         System.out.println(CharacterUtil.second());
         System.out.println(CharacterUtil.millisecond());
     }
+
     public static void regex() {
         String str = "你是不是傻"; // 需要检测的字符串
-        String pattern  = ".*不.*"; // 正则字符串
+        String pattern = ".*不.*"; // 正则字符串
 
         boolean matches = Pattern.matches(pattern, str);
         System.out.println(matches);
@@ -58,7 +72,7 @@ public class MainTest {
         // "[1]"代表第1位为数字1，"[358]"代表第二位可以为3、5、8中的一个，"\\d{9}"代表后面是可以是0～9的数字，有9位。
         String regex = "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$";
         Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         while (true) {
             try {

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /*
  * @ClassName Page
  * @Description 作用描述
@@ -18,7 +20,7 @@ public class MPage<T> {
     private int no; // 页码
     private int length; // 每页长度
     private long count; // 总数
-    private T  data; // 数据集合
+    private List<T>  data; // 数据集合
 
     public MPage(int no, int length) {
         this.no = no;

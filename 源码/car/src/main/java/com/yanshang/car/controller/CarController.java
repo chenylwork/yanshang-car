@@ -1,6 +1,7 @@
 package com.yanshang.car.controller;
 
 import com.yanshang.car.bean.*;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.CarService;
 import com.yanshang.car.services.ServerService;
@@ -185,8 +186,8 @@ public class CarController {
      * @param data
      * @return
      */
-    @RequestMapping("/price/save")
-    public NetMessage savePrice(String carid,String data) {
+    @RequestMapping("/price/save/{carid}")
+    public NetMessage savePrice(@PathVariable("carid") String carid,@RequestParam Map<String,String> data) {
         return carService.saveCarPrice(carid,data);
     }
     /**
@@ -198,6 +199,36 @@ public class CarController {
     public NetMessage getPrice(String carid) {
         return carService.getCarPrice(carid);
     }
+
+    /**
+     * 保存购车订单
+     * @param carOrder
+     * @return
+     */
+    @RequestMapping("/order/save")
+    public NetMessage saveCarOrder(CarOrder carOrder){
+        return carService.saveCarOrder(carOrder);
+    }
+
+    /**
+     * 获取购车订单
+     * @param carOrder
+     * @param page
+     * @return
+     */
+    @RequestMapping("/order/get")
+    public NetMessage getCarOrder(CarOrder carOrder, MPage<CarOrder> page){
+        return carService.getCarOrder(carOrder,page);
+    }
+
+    /**
+     * 获取用户的关于汽车的订单
+     * @param accountid
+     * @return
+     */
+    public NetMessage getUserCarOrder(String accountid) {
+        return null;
+    }
     /**
      * 根据汽车唯一标识获取该汽车的贷款信息
      * @param identity 汽车唯一标识
@@ -205,26 +236,6 @@ public class CarController {
      */
     @RequestMapping("/loan")
     public NetMessage loan(String identity) {
-        return null;
-    }
-
-    /**
-     * 保存贷款订单
-     * @param order
-     * @return
-     */
-    @RequestMapping("/order/loan/save")
-    public NetMessage saveLoanOrder(LoanOrder order) {
-        return null;
-    }
-
-    /**
-     * 保存全款订单
-     * @param order
-     * @return
-     */
-    @RequestMapping("/order/once/save")
-    public NetMessage saveLoanOrder(OnceOrder order) {
         return null;
     }
 

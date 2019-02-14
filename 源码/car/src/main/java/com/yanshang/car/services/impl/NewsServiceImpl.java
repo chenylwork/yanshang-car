@@ -87,6 +87,12 @@ public class NewsServiceImpl implements NewsService {
                     NetMessage.successNetMessage("", byId.get()) :
                     NetMessage.failNetMessage("", "没有需要的信息！！");
         }
+        if (data.containsKey("accountid")){
+            String accountid = data.get("accountid");
+            List<News> newsList = newsRepository.getByUserid(accountid);
+            if (newsList != null || !newsList.isEmpty())
+                return NetMessage.successNetMessage("",newsList);
+        }
         String no = data.get("no");
         String size = data.get("size");
         if (no == null || size == null) return NetMessage.failNetMessage("", "需要查询记录区间！！");

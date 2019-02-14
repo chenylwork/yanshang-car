@@ -3,18 +3,23 @@ package com.yanshang.car.services.impl;
 import com.yanshang.car.bean.*;
 import com.yanshang.car.bean.view.FansView;
 import com.yanshang.car.bean.view.RecommendView;
-import com.yanshang.car.commons.CharacterUtil;
-import com.yanshang.car.commons.NetMessage;
-import com.yanshang.car.commons.PhoneCodeUtil;
+import com.yanshang.car.commons.*;
+import com.yanshang.car.config.ValueBean;
 import com.yanshang.car.repositories.*;
 import com.yanshang.car.services.AccountService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.querydsl.QPageRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +36,59 @@ import java.util.UUID;
 @Service
 public class AccountServiceImpl implements AccountService {
 
+    private final String headPath = "/"+DigestUtils.md5Hex("user")+"/"+DigestUtils.md5Hex("head");
+    @Override
+    public NetMessage saveInfo(Account account, MultipartFile file) {
+        Integer id = account.getId();
+        Optional<Account> byId = accountRepository.findById(id);
+        if (id != null && byId.isPresent()) {
+            Account saveUser = byId.get();
+            if (file != null && !file.isEmpty()) {
+                if (!FileUtil.isImage(file)) return NetMessage.failNetMessage("","请上传图片文件");
+                String createtime = saveUser.getCreatetime();
+                String year = createtime.substring(0,4);
+                String month = createtime.substring(5,7);
+                String day = createtime.substring(8,10);
+                String head = headPath+"/"+year+"/"+month+"/"+day+"/"+id+"";
+                String fileName = FileUtil.getFileName(file, System.currentTimeMillis() + "");
+                head = head + fileName;
+                try {
+                    file.transferTo(FileUtil.createFile(ValueBean.IMG_PATH+head));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                saveUser.setHead(head);
+            }
+            if (!CharacterUtil.isEmpty(account.getName())){
+                saveUser.setName(account.getName());
+            }
+            accountRepository.save(saveUser);
+        } else {
+            return NetMessage.failNetMessage("","缺少账号唯一标识！！");
+        }
+        return NetMessage.successNetMessage("","信息录入成功！！");
+    }
 
+    @Override
+    public NetMessage getInfo(Account account,MPage<Account> mPage) {
+        Integer id = account.getId();
+        if (id != null) {
+            Optional<Account> byId = accountRepository.findById(id);
+            if (byId.isPresent()) return NetMessage.successNetMessage("",byId.get());
+        }
+        int no = mPage.getNo();
+        int length = mPage.getLength();
+        length = (length == 0) ? 10:length ;
+        int start = no*length;
+        QPageRequest qPageRequest = new QPageRequest(start,length);
+        Page<Account> all = accountRepository.findAll(qPageRequest);
+        if (all != null && !all.isEmpty()){
+            mPage.setCount(all.getTotalElements());
+            mPage.setData(all.getContent());
+            return NetMessage.successNetMessage("",mPage);
+        }
+        return NetMessage.failNetMessage("","没有需要的信息！！");
+    }
 
     @Override
     public NetMessage register(Account account, String code) {
@@ -53,6 +110,8 @@ public class AccountServiceImpl implements AccountService {
             String referrerCode = redisTemplate.opsForValue().get(REFERRER_CODE_NUM_KEY);
             if (CharacterUtil.isEmpty(referrerCode)) referrerCode = "0";
             account.setCode(CharacterUtil.referrerCode(referrerCode));
+            account.setCreatetime(CharacterUtil.dataTime());
+            account.setName(account.getPhone());
             accountRepository.save(account);
             redisTemplate.opsForValue().increment(REFERRER_CODE_NUM_KEY);
             return NetMessage.successNetMessage("","注册成功！！");

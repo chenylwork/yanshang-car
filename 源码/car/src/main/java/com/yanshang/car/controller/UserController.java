@@ -1,14 +1,17 @@
 package com.yanshang.car.controller;
 
+import com.yanshang.car.bean.Account;
 import com.yanshang.car.bean.Fans;
 import com.yanshang.car.bean.Idea;
 import com.yanshang.car.bean.Recommend;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
 import com.yanshang.car.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -21,6 +24,15 @@ import java.util.Map;
  **/
 @RestController
 public class UserController {
+    @RequestMapping("/info/save")
+    public NetMessage saveFans(Account account,
+                               @RequestParam(value = "file",required = false) MultipartFile file) {
+        return accountService.saveInfo(account,file);
+    }
+    @RequestMapping("/info/get")
+    public NetMessage getFans(Account account, MPage<Account> page) {
+        return accountService.getInfo(account,page);
+    }
     /**
      * 关注用户
      * @param fans

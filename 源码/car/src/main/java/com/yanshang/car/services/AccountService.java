@@ -1,7 +1,9 @@
 package com.yanshang.car.services;
 
 import com.yanshang.car.bean.*;
+import com.yanshang.car.commons.MPage;
 import com.yanshang.car.commons.NetMessage;
+import org.springframework.web.multipart.MultipartFile;
 import sun.nio.ch.Net;
 
 import java.util.Map;
@@ -20,6 +22,21 @@ public interface AccountService {
     String REFERRER_CODE_NUM_KEY = "referrer_code_num";
     String FANS_TO = "1";
     String FANS_FROM = "2";
+
+    /**
+     * 保存（修改）用户信息，录入用户基本资料使用
+     * @param account
+     * @param head 头像文件
+     * @return
+     */
+    NetMessage saveInfo(Account account,MultipartFile head);
+
+    /**
+     * 获取用户基本信息
+     * @param account
+     * @return
+     */
+    NetMessage getInfo(Account account, MPage<Account> mPage);
     /**
      * 注册账号
      * @param account 注册账户

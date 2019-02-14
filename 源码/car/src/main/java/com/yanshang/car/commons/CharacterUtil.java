@@ -1,5 +1,6 @@
 package com.yanshang.car.commons;
 
+import com.yanshang.car.util.SnowFlake;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.text.SimpleDateFormat;
@@ -25,9 +26,8 @@ public class CharacterUtil {
      * @return
      */
     public static String orderCode() {
-        return System.currentTimeMillis()+"";
+        return new SnowFlake(2, 3).nextId()+"";
     }
-
     /**
      * 生成推荐码
      * @param num

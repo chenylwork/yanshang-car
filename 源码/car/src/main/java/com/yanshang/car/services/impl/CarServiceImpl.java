@@ -187,7 +187,7 @@ public class CarServiceImpl implements CarService {
 //        Page<DBObject> PageImpl = new PageImpl<>(list,new QPageRequest(Integer.parseInt(no),Integer.parseInt(size)),count);
         if (list != null && !list.isEmpty()) {
             long count = mongoTemplate.count(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
-            MPage page = new MPage(Integer.parseInt(no), Integer.parseInt(size));
+            MPage<DBObject> page = new MPage(Integer.parseInt(no), Integer.parseInt(size));
             page.setCount(count);
             page.setData(list);
             return NetMessage.successNetMessage("",page);
@@ -256,7 +256,7 @@ public class CarServiceImpl implements CarService {
             return info;
         }
         HashMap<String, Object> content = (HashMap) info.getContent();
-        HashMap<String, Object> basic = (HashMap)content.get("basic");
+        HashMap<String, Object> basic = (HashMap<String, Object>)content.get("basic");
         basic.put("label",label);
         content.put("basic",basic);
         mongoTemplate.save(content,MONGODB_CAR_COLLECTION_NAME);
@@ -269,8 +269,8 @@ public class CarServiceImpl implements CarService {
         if (info.getStatus() == NetMessage.FAIl) return info.setContent("图片上传失败，没有对应汽车信息！！");
 
         HashMap<String,Object> content = (HashMap)info.getContent();
-        HashMap<String,Object> basic = (HashMap)content.get("basic");
-        HashMap<String,Object> colors = (HashMap)basic.get("colors");
+        HashMap<String,Object> basic = (HashMap<String, Object>)content.get("basic");
+        HashMap<String,Object> colors = (HashMap<String, Object>)basic.get("colors");
         String filePath = img_car_path+"/"+carid+"/"+FileUtil.getFileName(file, DigestUtils.md5Hex(color));
         File file1 = FileUtil.createFile(IMG_PATH + filePath);
         if(!FileUtil.isImage(file)){
@@ -304,7 +304,7 @@ public class CarServiceImpl implements CarService {
         if (info.getStatus() == NetMessage.FAIl) return info.setContent("上传失败，没有对应汽车信息！！");
 //        info = check(carid);
         HashMap<String,Object> content = (HashMap)info.getContent();
-        HashMap<String,Object> basic = (HashMap)content.get("basic");
+        HashMap<String,Object> basic = (HashMap<String, Object>)content.get("basic");
         List<String> filePaths = new ArrayList<>();
         List<String> fileNames = new ArrayList<>();
         for (int i =0; i<file.length; i++){
@@ -346,15 +346,21 @@ public class CarServiceImpl implements CarService {
         return info;
     }
 
+    /**
+     * 保存汽车价钱信息
+     * data.money 裸车价钱
+     * data.insurance 保险
+     * @param carid 汽车编号
+     * @param data 汽车价钱信息
+     * @return
+     */
     @Override
-    public NetMessage saveCarPrice(String carid,String data) {
+    public NetMessage saveCarPrice(String carid, Map<String, String> data) {
         NetMessage info = getInfo(carid);
         if (info.getStatus() == NetMessage.FAIl) return info.setContent("价钱信息保存失败，没有该汽车信息！！");
         HashMap<String,Object> content = (HashMap)info.getContent();
-        HashMap<String,Object> basic = (HashMap)content.get("basic");
-
-        HashMap<String, Object> priceObject = ObjectUtils.string2Map(data);
-        basic.put("price",priceObject);
+        HashMap<String,Object> basic = (HashMap<String, Object>)content.get("basic");
+        basic.put("price",data);
 
         if (info.getStatus() == NetMessage.FAIl) return info;
         mongoTemplate.save(content, MONGODB_CAR_COLLECTION_NAME);
@@ -369,6 +375,48 @@ public class CarServiceImpl implements CarService {
         Object one = mongoTemplate.findOne(query, Object.class, MONGODB_CAR_PRICE_COLLECTION_NAME);
         if (one != null) return NetMessage.successNetMessage("",one);
         return NetMessage.failNetMessage("","暂无需要信息！！");
+    }
+
+    @Override
+    public NetMessage saveCarOrder(CarOrder carOrder) {
+        String accountid = carOrder.getAccountid();
+        NetMessage info = accountService.getUser(accountid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+
+        String carid = carOrder.getCarid();
+        info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        if ("1".equals(carOrder.getEnd())){
+            carOrder.setEnd(CharacterUtil.dataTime());
+        }
+        if (CharacterUtil.isEmpty(carOrder.getOrderCode())){
+            carOrder.setOrderCode(CharacterUtil.orderCode());
+            carOrder.setStart(CharacterUtil.dataTime());
+        }
+
+        carOrderRepository.save(carOrder);
+        return NetMessage.successNetMessage("","订单提交成功！！");
+    }
+
+    @Override
+    public NetMessage getCarOrder(CarOrder carOrder,MPage<CarOrder> page) {
+        String accountid = carOrder.getAccountid();
+        if (!CharacterUtil.isEmpty(accountid)){
+            List<CarOrder> carOrderList = carOrderRepository.getByAccountid(accountid);
+            if (carOrderList != null && !carOrderList.isEmpty())
+                return NetMessage.successNetMessage("",carOrderList);
+        }
+        int no = page.getNo();
+        int length = page.getLength();
+        length = (length == 0) ? 10 : length;
+        int start = no*length;
+        QPageRequest pageRequest= new QPageRequest(start,length);
+        Page<CarOrder> all = carOrderRepository.findAll(pageRequest);
+        if (all != null && !all.isEmpty()){
+            MPage mPage = new MPage(no,length,all.getTotalElements(),all.getContent());
+            return NetMessage.successNetMessage("",mPage);
+        }
+        return NetMessage.failNetMessage("","没有您需要的信息！！");
     }
 
     @Override
@@ -447,6 +495,7 @@ public class CarServiceImpl implements CarService {
                 NetMessage.failNetMessage("","没有需要的信息！！");
     }
 
+
     @Value("${basic.project.img.home}")
     private String IMG_PATH;
     private String img_brand_path = "/brands";
@@ -471,4 +520,6 @@ public class CarServiceImpl implements CarService {
     private CarFansRepository carFansRepository;
     @Autowired
     private ServerService serverService;
+    @Autowired
+    private CarOrderRepository carOrderRepository;
 }

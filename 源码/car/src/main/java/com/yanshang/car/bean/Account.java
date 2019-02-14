@@ -30,7 +30,7 @@ public class Account {
     private String code; // 推荐码
     private int informVersion; // 已读取的通知版本
     private int noticeVersion; // 已读取的公告版本
-
+    private String createtime; // 创建时间
 //    private String referrerCode; // 推荐人码
 //    private String referrerName; // 推荐人姓名
 //    private String referrerPhone; // 推荐人电话
