@@ -27,8 +27,9 @@ public class MainTest {
 //        25f9f2ff19b0eecef6dccd65d4c43e59
 //        385f5f004e343c6201061a8cd918d677
 
-        System.out.println(DigestUtils.md5Hex("开机键事不关己"));
+        System.out.println(DigestUtils.md5Hex("yskj"));
         System.out.println(CharacterUtil.dataTime());
+        String s = "";
 
     }
 

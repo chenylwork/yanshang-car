@@ -94,7 +94,7 @@ public class PhoneCodeUtil {
      * @param code
      */
     private static NetMessage send(String phone,String code) {
-        String content = "来个车：\n 您的验证码为："+code+".\n如非本人操作请忽略本信息。";
+        String content = "来个车：您的验证码为："+code+".如非本人操作请忽略本信息。";
         return SMSUtil.send(content, phone);
     }
 

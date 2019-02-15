@@ -1,10 +1,8 @@
 
 package com.yanshang.car.sms;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 public final class SignUtil {
 
@@ -20,7 +18,6 @@ public final class SignUtil {
     public static String treeMapToString(TreeMap<String, Object> map, String signKey) {
         if (map == null || map.size() == 0)
             return null;
-
         Iterator<Entry<String, Object>> it = map.entrySet().iterator();
         StringBuilder builder = new StringBuilder(2048);
         while (it.hasNext()) {
@@ -42,9 +39,8 @@ public final class SignUtil {
         TreeMap<String, Object> treeMap = new TreeMap<String, Object>();
         treeMap.putAll(headers);
         treeMap.putAll(reqBody);
-
         String keyValues = SignUtil.treeMapToString(treeMap, signKey);
-        String sign = MD5Util.md5Crypt(keyValues);
+        String sign = MD5Util.md5Crypt(keyValues).toLowerCase();
         return sign;
     }
 }

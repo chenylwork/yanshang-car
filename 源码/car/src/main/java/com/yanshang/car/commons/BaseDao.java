@@ -16,7 +16,7 @@ public class BaseDao {
         Statement statement = null;
         Connection carConn = null;
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("com.mysql.jdbc.Driver");
             statement = connection.createStatement();
             statement.execute("CREATE DATABASE IF NOT EXISTS `"+name+"` DEFAULT CHARACTER SET utf8;");
             carConn = getConn(name, host, username, password);
@@ -41,7 +41,7 @@ public class BaseDao {
         String PASSWORD=password;
         Connection connection = null;
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("com.mysql.jdbc.Driver");
             return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (Exception e) {
             e.printStackTrace();

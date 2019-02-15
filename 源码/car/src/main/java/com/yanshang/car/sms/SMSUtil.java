@@ -1,14 +1,27 @@
 package com.yanshang.car.sms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yanshang.car.commons.CharacterUtil;
+import com.yanshang.car.commons.FileUtil;
 import com.yanshang.car.commons.NetMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +32,14 @@ import org.springframework.stereotype.Component;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -65,6 +79,7 @@ public class SMSUtil {
         requestBody.put("phone", phone);
 
 
+
         Map<String, Object> requestHead = new HashMap<>();
         requestHead.put("appid",appid);
         requestHead.put("apiver",apiver);
@@ -75,26 +90,80 @@ public class SMSUtil {
         String crypt = "0";
         requestHead.put("crypt",crypt);
 
-        String sign = SignUtil.getSign(appKey, requestBody, requestHead);
-        requestBody.put("sign", sign);
 
-        HttpClient httpClient = new HttpClient();
-        PostMethod method = new PostMethod(SEND_URL);
-        method.addRequestHeader("appid",appid);
-        method.addRequestHeader("apiver",apiver);
-        method.addRequestHeader("timestamp",System.currentTimeMillis()+"");
-        method.addRequestHeader("sign",sign);
-        method.addRequestHeader("nz",nz);
-        method.addRequestHeader("crypt",crypt);
+        String sign = SignUtil.getSign(appKey, requestBody, requestHead);
+        requestHead.put("sign", sign);
+        requestBody.put("sign", SIGN);
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+
+        HttpPost httpPost = new HttpPost(SEND_URL);
+
+        httpPost.addHeader("appid",(String) requestHead.get("appid"));
+        httpPost.addHeader("apiver",(String) requestHead.get("apiver"));
+        httpPost.addHeader("timestamp",(String) requestHead.get("timestamp"));
+        httpPost.addHeader("sign",(String) requestHead.get("sign"));
+        httpPost.addHeader("nz",(String) requestHead.get("nz"));
+        httpPost.addHeader("crypt",(String) requestHead.get("crypt"));
+        httpPost.setHeader("Accept","aplication/json");
+        httpPost.addHeader("Content-Type","application/json;charset=UTF-8");
+//        PostMethod method = new PostMethod(SEND_URL);
+//        method.addRequestHeader("appid",appid);
+//        method.addRequestHeader("apiver",apiver);
+//        method.addRequestHeader("timestamp",System.currentTimeMillis()+"");
+//        method.addRequestHeader("sign",sign);
+//        method.addRequestHeader("nz",nz);
+//        method.addRequestHeader("crypt",crypt);
+        String responseBody = "";
+        CloseableHttpResponse response = null;
         try {
             String requestContent = objectMapper.writeValueAsString(requestBody);
             String charset = "UTF-8";
             String contentType = "application/json";
-            method.setRequestEntity(new StringRequestEntity(requestContent, contentType, charset));
-            int code = httpClient.executeMethod(method);
-            String responseBody = method.getResponseBodyAsString();
-            logger.info(responseBody);
+            StringEntity entity = new StringEntity(requestContent);
+            entity.setContentEncoding(charset);
+            entity.setContentType(contentType);
+            httpPost.setEntity(entity);
+//            method.setRequestEntity(new StringRequestEntity(requestContent, contentType, charset));
+//            int code = httpClient.execute(method);
+//            int statusCode = response.getStatusLine().getStatusCode();
+//            responseBody = method.getResponseBodyAsString();
+            response = httpClient.execute(httpPost);
+            HttpEntity responseEntity = response.getEntity();
+            int code = response.getStatusLine().getStatusCode();
+//            HttpEntity responseEntity = response.getEntity();
+//            responseBody = EntityUtils.toString(responseEntity, "utf8");
+            Map<String,String> responseHeads = new HashMap<>();
+            for (Header header : response.getAllHeaders()) {
+                responseHeads.put(header.getName(),header.getValue());
+            }
+
             if (code == 200) {
+                if (responseHeads.containsKey("nz") && "1".equals(responseHeads.get("nz"))) {
+                    InputStream is = responseEntity.getContent();
+                    is= new GZIPInputStream(is);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(is,"utf-8"));
+                    String line = null;
+                    StringBuffer sb = new StringBuffer();
+                    while((line = br.readLine())!=null) {
+                        sb.append(line);
+                    }
+                    responseBody = sb.toString();
+                }
+                // 返回值解密
+                if (responseHeads.containsKey("crypt")){
+                    String responseCrypt = responseHeads.get("crypt");
+                    // AES128 解密 ,密钥为appSecret的前16bytes
+                    if ("1".equals(responseCrypt)) {
+
+                    }
+                    // AES256 解密,密钥为appSecret
+                    if ("2".equals(responseCrypt)) {
+
+                    }
+                }
+                if (CharacterUtil.isEmpty(responseBody)) {
+                    responseBody = EntityUtils.toString(responseEntity, "utf-8");
+                }
                 HashMap<String, Object> hashMap = objectMapper.readValue(responseBody, HashMap.class);
                 int status = (Integer) hashMap.get("status");
                 if (90001 == status) {
@@ -103,11 +172,22 @@ public class SMSUtil {
                     return NetMessage.failNetMessage("", hashMap);
                 }
             } else {
-                return NetMessage.failNetMessage("", "短信发送请求失败！！");
+                return NetMessage.failNetMessage("", responseBody);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return NetMessage.errorNetMessage();
+            return NetMessage.failNetMessage("",responseBody);
+        } finally {
+            logger.info(responseBody);
+            try {
+
+                response.close();
+                httpClient.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                return NetMessage.errorNetMessage();
+            }
+
         }
     }
 
@@ -238,6 +318,7 @@ public class SMSUtil {
 //    appId:HEBEICHUANGGEE5XEQFLF1NW7W0YE1J2
 //    appKey:OP9UGHZWRC3L72H7O3MHRVRA7RL0PIP6
 //    appSecret:eSjnSzZJNltJzKjphVhowg==
+    private final static String SIGN = "河北格创";
     /**
      * 身份标识id
      */
