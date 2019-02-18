@@ -117,9 +117,10 @@ public class SMSUtil {
         CloseableHttpResponse response = null;
         try {
             String requestContent = objectMapper.writeValueAsString(requestBody);
-            String charset = "UTF-8";
+            String charset = "utf-8";
             String contentType = "application/json";
-            StringEntity entity = new StringEntity(requestContent);
+            StringEntity entity = new StringEntity(requestContent,"utf-8");
+            System.out.println(requestContent);
             entity.setContentEncoding(charset);
             entity.setContentType(contentType);
             httpPost.setEntity(entity);
