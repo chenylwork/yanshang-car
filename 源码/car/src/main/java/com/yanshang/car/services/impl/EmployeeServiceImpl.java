@@ -61,6 +61,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public NetMessage saveReserve(ReserveOrder reserve) {
+        if (reserve.getReserveid() == null) {
+            reserve.setCreateTime(CharacterUtil.dataTime());
+        }
         reserveOrderRepository.save(reserve);
         return NetMessage.successNetMessage("","保存成功！！");
     }

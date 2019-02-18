@@ -14,7 +14,8 @@ import java.util.List;
  * @Version 1.0
  **/
 @Repository
-public interface ShoppingOrderRepository extends JpaRepositoryImplementation<ShoppingOrder,Integer>{
+public interface ShoppingOrderRepository
+        extends JpaRepositoryImplementation<ShoppingOrder,String>{
     /**
      * 根据用户编号获取
      * @param accountid

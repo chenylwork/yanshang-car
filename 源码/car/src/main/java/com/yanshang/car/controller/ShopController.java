@@ -34,6 +34,10 @@ public class ShopController {
     public NetMessage saveGoods(@RequestParam Map<String,Object> goods, MultipartFile... file) {
         return shopService.saveGoods(goods,file);
     }
+    @RequestMapping("/goods/del")
+    public NetMessage delGoods(String ... goodsid) {
+        return shopService.delShoppingCart(goodsid);
+    }
 
     /**
      * 获取商品信息
@@ -85,6 +89,15 @@ public class ShopController {
     }
 
     /**
+     * 删除购物车列表
+     * @param cartid
+     * @return
+     */
+    @RequestMapping("/cart/del")
+    public NetMessage delShoppingCart(String... cartid) {
+        return shopService.delShoppingCart(cartid);
+    }
+    /**
      * 保存收货地址
      * @param shoppingAddress
      * @return
@@ -125,6 +138,15 @@ public class ShopController {
     }
 
     /**
+     * 删除购物订单
+     * @param data
+     * @return
+     */
+    @RequestMapping("/order/del")
+    public NetMessage delOrder(@RequestParam Map<String,String> data) {
+        return shopService.delOrder(data);
+    }
+    /**
      * 保存积分信息
      * @param shoppingScore
      * @return
@@ -138,7 +160,20 @@ public class ShopController {
     public NetMessage signin(ShoppingScore shoppingScore) {
         shoppingScore.setName("签到");
         shoppingScore.setScore(5);
-        return shopService.saveShoppingScore(shoppingScore);
+        NetMessage netMessage = shopService.saveShoppingScore(shoppingScore);
+        return (netMessage.getStatus() == NetMessage.FAIl)?
+                netMessage.setContent("签到失败！！"):
+                netMessage.setContent("签到成功！！");
+    }
+
+    /**
+     * 判断今日是否签到
+     * @param accountid
+     * @return
+     */
+    @RequestMapping("/signin/is")
+    public NetMessage signinIs(String accountid) {
+        return shopService.dayIsSignin(accountid);
     }
 
     /**

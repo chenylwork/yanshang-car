@@ -10,8 +10,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @SpringBootApplication
 public class CarApplication extends SpringBootServletInitializer {
 
-//	private final static String password = "root";
-	private final static String password = "3xju5kgn";
+	private final static String password = "root";
+//	private final static String password = "3xju5kgn";
 	private final static String username = "root";
 
 	@Override

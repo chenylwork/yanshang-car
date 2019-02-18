@@ -22,4 +22,5 @@ public interface ShoppingScoreRepository extends JpaRepositoryImplementation<Sho
      * @return
      */
     List<ShoppingScore> getByAccountid(String accountid);
+
 }

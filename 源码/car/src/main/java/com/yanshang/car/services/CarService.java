@@ -47,6 +47,15 @@ public interface CarService {
     NetMessage saveInfo(String data);
 
     /**
+     * 保存汽车配置详细信息
+     * @param carid 汽车编号
+     * @param name 配置名称
+     * @param file 配置文件
+     * @return
+     */
+    NetMessage saveDetails(String carid,String name,MultipartFile file);
+
+    /**
      * 评论汽车
      * @param carComment
      * @return
@@ -193,7 +202,7 @@ public interface CarService {
     NetMessage saveTestOrder(TestOrder testOrder);
 
     /**
-     * 获取汽车订单信息
+     * 获取汽车试驾订单信息
      * @return
      */
     NetMessage getTestOrders(TestOrder testOrder);

@@ -79,6 +79,12 @@ public class CharacterUtil {
         String pattern = YEAR + "-" + MONTH + "-" + DAY + " "+ HOUR + ":" + MINUTE + ":" + SECOND + " " + MILLISECOND;
         return new SimpleDateFormat(pattern).format(new Date());
     }
+    public static String data() {
+        return dataTime().substring(0,10);
+    }
+    public static String time() {
+        return dataTime().substring(0,10);
+    }
     public static String year() {
         return dataTime().substring(0,4);
     }

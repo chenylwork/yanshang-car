@@ -20,15 +20,18 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class TestOrder {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer orderid; // 订单编号
+    private String ordercode; // 订单编号
     private String userid; // 用户编号
     private String carid; // 汽车编号
-    private String color; //  汽车颜色
-    private String deploy; // 汽车配置
-    private String time;// 时间
+    private String image; //  汽车图片
+    private String model; // 汽车配置：基础版
+    private String time;// 预约时间时间
     private String address; // 地点
-    private String name; // 业务员姓名
-    private String phone; // 业务员电话
-    private String message; // 给业务员留言
+//    private String name; // 业务员姓名
+//    private String phone; // 业务员电话
+//    private String message; // 给业务员留言
+    private String createTime; // 订单创建时间
+    private String status = "0"; // 订单状态：0未完成，1已完成
+
+
 }

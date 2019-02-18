@@ -17,6 +17,8 @@ import com.yanshang.car.services.ShopService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Query;
@@ -25,6 +27,10 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
@@ -141,6 +147,14 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
+    @Transactional
+    @Modifying
+    public NetMessage delShoppingCart(String... cartids) {
+        for (String cartid : cartids) cartRepository.deleteById(Integer.parseInt(cartid));
+        return NetMessage.successNetMessage("","删除成功！！");
+    }
+
+    @Override
     public NetMessage saveShoppingCart(ShoppingCart shoppingCart) {
         NetMessage info = accountService.getUser(shoppingCart.getAccountid());
         if(info.getStatus() == NetMessage.FAIl) return info;
@@ -217,7 +231,8 @@ public class ShopServiceImpl implements ShopService {
         int oldCount = 0;
         int newCount = 0;
         HashMap<String,Object> goods = null;
-        if (order.getOrderCode() == null) { // 保存
+        Optional<ShoppingOrder> byId = orderRepository.findById(order.getOrderCode());
+        if (!byId.isPresent()) { // 保存
             order.setOrderCode(CharacterUtil.orderCode());
             String accountid = order.getAccountid();
             NetMessage info = accountService.getUser(accountid);
@@ -236,6 +251,12 @@ public class ShopServiceImpl implements ShopService {
             saveGoods(goods);
             order.setCreateTime(CharacterUtil.dataTime());
         } else {
+            ShoppingOrder oldOrder = byId.get();
+            oldOrder.setCreateTime(oldOrder.getCreateTime());
+            oldOrder.setPaymentTime(oldOrder.getPaymentTime());
+            oldOrder.setSendTime(oldOrder.getSendTime());
+            oldOrder.setEndTime(oldOrder.getEndTime());
+
             if ("1".equals(order.getPaymentTime()))
                 order.setPaymentTime(CharacterUtil.dataTime());
             if ("1".equals(order.getSendTime()))
@@ -265,7 +286,7 @@ public class ShopServiceImpl implements ShopService {
         } else {
             String orderid = data.get("orderid");
             if (CharacterUtil.isEmpty(orderid)) {
-                Optional<ShoppingOrder> byId = orderRepository.findById(Integer.parseInt(orderid));
+                Optional<ShoppingOrder> byId = orderRepository.findById(orderid);
                 if (byId.isPresent())return NetMessage.successNetMessage("",byId.get());
             }
         }
@@ -273,13 +294,40 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
+    public NetMessage delOrder(Map<String, String> data) {
+        String id = data.get("orderid");
+        orderRepository.deleteById(id);
+        return NetMessage.successNetMessage("","删除成功！！");
+    }
+
+    @Override
     public NetMessage saveShoppingScore(ShoppingScore shoppingScore) {
         String accountid = shoppingScore.getAccountid();
         NetMessage info = accountService.getUser(accountid);
         if (info.getStatus() == NetMessage.FAIl) return info;
+
         shoppingScore.setTime(CharacterUtil.dataTime());
         scoreRepository.save(shoppingScore);
         return NetMessage.successNetMessage("","保存成功！！");
+    }
+
+    @Override
+    public NetMessage dayIsSignin(String accountid) {
+        List<ShoppingScore> all = scoreRepository.findAll(new Specification<ShoppingScore>() {
+            @Override
+            public Predicate toPredicate(Root<ShoppingScore> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> list = new ArrayList<>();
+//                if ()
+                list.add(criteriaBuilder.equal(root.get("accountid").as(String.class), accountid));
+                list.add(criteriaBuilder.equal(root.get("name").as(String.class), "签到"));
+                String time = CharacterUtil.data();
+                list.add(criteriaBuilder.like(root.get("time").as(String.class), "%" + time + "%"));
+                return criteriaQuery.where(list.toArray(new Predicate[list.size()])).getRestriction();
+            }
+        });
+        return (all != null && !all.isEmpty()) ?
+                NetMessage.successNetMessage("","今日已签到！！"):
+                NetMessage.failNetMessage("","今日未签到！！");
     }
 
     @Override

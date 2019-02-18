@@ -26,7 +26,8 @@ public class ReserveOrder {
     private String customer; // 客户名称
     private String phone; // 客户名称
     private String address; // 预约地址
-    private String time; // 预约地址
+    private String time; // 预约时间
+    private String createTime; // 下单时间
     private String status; // 状态
 
 }

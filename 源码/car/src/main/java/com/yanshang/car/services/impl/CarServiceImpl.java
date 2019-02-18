@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.mongodb.DBObject;
 import com.yanshang.car.bean.*;
 import com.yanshang.car.commons.*;
+import com.yanshang.car.config.ValueBean;
 import com.yanshang.car.repositories.*;
 import com.yanshang.car.services.AccountService;
 import com.yanshang.car.services.CarService;
@@ -74,26 +75,69 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public NetMessage saveInfo(String data) {
-        JsonNode jsonNode = null;
-        HashMap<String, Object> map = null;
-        try {
-            jsonNode = ObjectUtils.objectMapper.readTree(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        HashMap<String, Object> basic = ObjectUtils.string2Map(jsonNode.get("basic").toString());
-        Object carid = basic.get("carid");
-        map = ObjectUtils.string2Map(data);
-        if (carid == null) { // 添加
-            carid = DigestUtils.md5Hex(basic.get("name").toString());
-            if(mongoTemplate.findById(carid,Object.class,MONGODB_CAR_COLLECTION_NAME) != null)
-                return NetMessage.failNetMessage("","该汽车信息已存在！！");
+//        JsonNode jsonNode = null;
+//        HashMap<String, Object> map = null;
+//        try {
+//            jsonNode = ObjectUtils.objectMapper.readTree(data);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        HashMap<String, Object> basic = ObjectUtils.string2Map(jsonNode.get("basic").toString());
+
+        HashMap<String, Object> map = new HashMap<>();
+        HashMap<String, Object> basic = ObjectUtils.string2Map(data);
+
+        String carid = "";
+        if (!basic.containsKey("carid")) { // 添加
+            if (!basic.containsKey("name") || basic.get("name") == null)
+                return NetMessage.failNetMessage("","缺少汽车名称信息！！");
+
+            Query query = new Query(Criteria.where("basic.name").is(basic.get("name")));
+
+            if(mongoTemplate.exists(query, MONGODB_CAR_COLLECTION_NAME)) {
+                return NetMessage.failNetMessage("","已有该名称的汽车信息！！");
+            }
+            carid = DigestUtils.md5Hex(basic.get("name").toString()+System.currentTimeMillis());
             basic.put("carid",carid);
+        } else {
+            carid = (String) basic.get("carid");
+            try{
+                map = mongoTemplate.findById(carid, HashMap.class, MONGODB_CAR_COLLECTION_NAME);
+            } catch (Exception e){
+                return NetMessage.failNetMessage("","不存在该汽车信息！！");
+            }
+            HashMap<String,Object> oldBasic = (HashMap<String,Object>)map.get("basic");
+            basic.forEach((key,value) -> {
+                oldBasic.put(key,value);
+            });
+            basic = oldBasic;
         }
         map.put("_id",carid);
         map.put("basic", basic);
         mongoTemplate.save(map,MONGODB_CAR_COLLECTION_NAME);
         return NetMessage.successNetMessage("","保存成功");
+    }
+
+    @Override
+    public NetMessage saveDetails(String carid, String name, MultipartFile file) {
+        NetMessage info = getInfo(carid);
+        if (info.getStatus() == NetMessage.FAIl) return info;
+        if (!FileUtil.isImage(file))
+            return NetMessage.failNetMessage("","请上传图片文件！！");
+
+        HashMap<String,Object> map = (HashMap)info.getContent();
+        String fileName = FileUtil.getFileName(file, DigestUtils.md5Hex(name));
+        File saveFile = FileUtil.createFile(ValueBean.IMG_PATH + img_car_path + "/" + carid + "/" + fileName);
+        try {
+            file.transferTo(saveFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return NetMessage.errorNetMessage();
+        }
+        map.put(name,img_car_path+"/"+carid+"/"+fileName);
+
+        mongoTemplate.save(map,MONGODB_CAR_COLLECTION_NAME);
+        return NetMessage.successNetMessage("","配置信息保存成功！！");
     }
 
     @Override
@@ -173,14 +217,23 @@ public class CarServiceImpl implements CarService {
         }
 
         // 获取信息集合
-        String no = data.get("no");
-        String size = data.get("size");
+        String no = data.containsKey("no") ? data.get("no") : "0";
+        String size = data.containsKey("size") ? data.get("size") : "10";
 
         String label = data.get("label");
         if (!CharacterUtil.isEmpty(label)){
             criteria = Criteria.where("basic.label").regex("^.*"+label+".*$");
             query.addCriteria(criteria);
         }
+
+        if (data.containsKey("brand")) {
+            String brand = data.get("brand");
+            criteria = (criteria == null) ?
+                    Criteria.where("basic.brand").is(brand):
+                    criteria.and("basic.brand").is(brand);
+            query.addCriteria(criteria);
+        }
+
         long start = (Integer.parseInt(no) - 1) * Integer.parseInt(size);
         query = query.skip(start).limit(Integer.parseInt(size));
         List<DBObject> list = mongoTemplate.find(query, DBObject.class,MONGODB_CAR_COLLECTION_NAME);
@@ -360,6 +413,7 @@ public class CarServiceImpl implements CarService {
         if (info.getStatus() == NetMessage.FAIl) return info.setContent("价钱信息保存失败，没有该汽车信息！！");
         HashMap<String,Object> content = (HashMap)info.getContent();
         HashMap<String,Object> basic = (HashMap<String, Object>)content.get("basic");
+
         basic.put("price",data);
 
         if (info.getStatus() == NetMessage.FAIl) return info;
@@ -427,6 +481,13 @@ public class CarServiceImpl implements CarService {
        info = accountService.getUser(rentOrder.getUserid());
        if (info.getStatus() == NetMessage.FAIl)return info;
 
+        Optional<RentOrder> byId = carRentOrderRepository.findById(rentOrder.getOrdercode());
+        if (!byId.isPresent()) {
+            rentOrder.setCreateTime(CharacterUtil.dataTime());
+        } else {
+            RentOrder oldRentOrder = byId.get();
+            rentOrder.setCreateTime(oldRentOrder.getCreateTime());
+        }
         carRentOrderRepository.save(rentOrder);
         return NetMessage.successNetMessage("","保存成功");
     }
@@ -452,13 +513,22 @@ public class CarServiceImpl implements CarService {
         if (info.getStatus() == NetMessage.FAIl) return info;
 
         info = getInfo(testOrder.getCarid());
-        if (info.getStatus() == NetMessage.FAIl) return info;
+        if (info.getStatus() == NetMessage.FAIl) return info.setContent("没有该汽车信息！！");
+        Optional<TestOrder> byId = carTestOrderRepository.findById(testOrder.getOrdercode());
+
+        if (!byId.isPresent()) {
+            testOrder.setCreateTime(CharacterUtil.dataTime());
+        } else {
+            TestOrder oldOrder = byId.get();
+            testOrder.setCreateTime(oldOrder.getCreateTime());
+        }
         carTestOrderRepository.save(testOrder);
         return NetMessage.successNetMessage("","保存成功！！");
     }
 
     @Override
     public NetMessage getTestOrders(TestOrder testOrder) {
+
         List<TestOrder> all = carTestOrderRepository.findAll(new Specification<TestOrder>() {
             @Override
             public Predicate toPredicate(Root<TestOrder> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {

@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
  * @Version 1.0
  **/
 @Repository
-public interface CarTestOrderRepository extends JpaRepositoryImplementation<TestOrder,Integer>{
+public interface CarTestOrderRepository extends JpaRepositoryImplementation<TestOrder,String>{
 
 }

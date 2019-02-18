@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
  * @Version 1.0
  **/
 @Repository
-public interface CarRentOrderRepository extends JpaRepositoryImplementation<RentOrder,Integer>{
+public interface CarRentOrderRepository extends JpaRepositoryImplementation<RentOrder,String>{
 
 }

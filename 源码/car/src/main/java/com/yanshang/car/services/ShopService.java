@@ -59,6 +59,13 @@ import java.util.Map;
      NetMessage saveShoppingCart(ShoppingCart shoppingCart) ;
 
     /**
+     * 删除购物车订单
+     * @param cartid
+     * @return
+     */
+    NetMessage delShoppingCart(String... cartid);
+
+    /**
      * 查询获取购物车信息
      * @param data
      * @return
@@ -94,11 +101,24 @@ import java.util.Map;
     NetMessage getOrder(Map<String,String> data);
 
     /**
+     * 删除购物订单
+     * @param data
+     * @return
+     */
+    NetMessage delOrder(Map<String,String> data);
+    /**
      * 保存商品积分
      * @param shoppingScore
      * @return
      */
     NetMessage saveShoppingScore(ShoppingScore shoppingScore);
+
+    /**
+     * 用户今天是否签到
+     * @param accountid
+     * @return
+     */
+    NetMessage dayIsSignin(String accountid);
 
     /**
      *

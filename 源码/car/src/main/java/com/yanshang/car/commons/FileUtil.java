@@ -81,6 +81,7 @@ public class FileUtil {
      * @return
      */
     public static boolean isImage(MultipartFile file) {
+        if (file == null) return false;
         try {
             if (ImageIO.read(file.getInputStream()) == null) return false;
         } catch (IOException e) {

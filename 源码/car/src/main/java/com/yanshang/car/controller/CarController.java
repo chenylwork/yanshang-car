@@ -51,13 +51,25 @@ public class CarController {
     }
 
     /**
-     * 保存汽车信息
+     * 保存汽车基本信息
      * @param data
      * @return ,MultipartFile... file
      */
     @RequestMapping("/save/info")
     public NetMessage saveInfo(String data) {
         return carService.saveInfo(data);
+    }
+
+    /**
+     * 保存汽车配置信息
+     * @param carid 汽车编号
+     * @param name 汽车配置名称
+     * @param file 汽车配置文件
+     * @return
+     */
+    @RequestMapping("/save/details")
+    public NetMessage saveDetails(String carid,String name,MultipartFile file) {
+        return carService.saveDetails(carid,name,file);
     }
 
     @RequestMapping("/save/label")
@@ -270,7 +282,7 @@ public class CarController {
     }
 
     /**
-     * 获取时间信息
+     * 获取试驾信息
      * @param order
      * @return
      */
