@@ -1,0 +1,22 @@
+<!--pages/register/register.wxml-->
+<form>
+  <view class='center login_input_view' style='margin-top:200rpx;'>
+    <image src='/image/phone.png' class='login_icon fl'></image>
+    <input class='login_input fl' placeholder='请输入手机号' type='text' focus='true'></input>
+  </view>
+  <view class='center login_input_view'>
+    <image src='/image/code.png' class='login_icon fl'></image>
+    <input class='login_input' placeholder='请输入验证码' type='text' style='width:400rpx;'></input>
+    <view class='login_code'>获取验证码</view>
+  </view>
+  <view class='center login_input_view'>
+    <image src='/image/pwd.png' class='login_icon fl'></image>
+    <input class='login_input' placeholder='请输入密码' type='text' ></input>
+  </view>
+  <button class='center login_button' style='margin-top:60rpx;'>注册</button>
+</form>
+<view class="login_bottom_txt" style='margin-top:60rpx;'>
+    <text bindtap='to_pass_pag'>忘记密码</text>
+    |
+    <text bindtap='to_login_pag'>用户登录</text>
+</view>

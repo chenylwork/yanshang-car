@@ -1,0 +1,80 @@
+<!--index.wxml-->
+<image style='width:100%; height:500rpx;' src='/image/page/home/1.png'></image>
+<view>
+    <view class='brand_list_title center'>
+        <image src='/image/page/home/brand_title.png'></image>
+        <view class='brand_title_txt'>车型车系</view>
+        
+    </view>
+    <view class='brand_box_list'>
+        <view class='brand_box'>
+            <image class='brand_image' src='/image/page/home/jili.png'></image>
+            <view class='brand_txt'>吉利</view>
+        </view>
+        <view class='brand_box'>
+            <image class='brand_image' src='/image/page/home/xinte.png'></image>
+            <view class='brand_txt'>新特</view>
+        </view>
+        <view class='brand_box'>
+            <image class='brand_image' src='/image/page/home/jili.png'></image>
+            <view class='brand_txt'>吉利</view>
+        </view>
+        <view class='brand_box'>
+            <image class='brand_image' src='/image/page/home/xinte.png'></image>
+            <view class='brand_txt'>新特</view>
+        </view>
+    </view>
+    
+</view>
+<view class='main_box'>
+    <image class='main_box_bk' src='/image/page/home/main_bk.png'></image>
+    <view class='main_box_content_panel'>
+        <view class='main_box_content'>
+            <view class='main_title center'>
+                <view>用最低的首付开新车</view>
+                <view style='font-size:80rpx;'>推荐车型</view>
+            </view>
+            <view class='main_car_box_list_box'><!-- 隐藏滚动条 -->
+                <view class='center main_car_box_list'>
+                    <view class='main_car_box'>
+                        <image class='fl main_car_title_ic' src='/image/page/home/main_car_label.png'></image>
+                        <view class='fr main_car_title_txt'>低首付</view>
+                        <view class='clear'></view>
+                        <image mode='aspectFit' class='main_car_img' src='/image/page/home/che1.png'></image>
+                        <view class='car_info_size car_brand_tx'>牌子和型号</view>
+                        <view class='car_info_size car_one_tx'>首付*元</view>
+                        <view class='car_info_size car_money_tx'>月供32054元</view>
+                    </view>
+                    <view class='main_car_box'>
+                        <image class='fl main_car_title_ic' src='/image/page/home/main_car_label.png'></image>
+                        <view class='fr main_car_title_txt'>低首付</view>
+                        <view class='clear'></view>
+                        <image mode='aspectFit' class='main_car_img' src='/image/page/home/che1.png'></image>
+                        <view class='car_info_size car_brand_tx'>牌子和型号</view>
+                        <view class='car_info_size car_one_tx'>首付*元</view>
+                        <view class='car_info_size car_money_tx'>月供32054元</view>
+                    </view>
+                    <view class='main_car_box'>
+                        <image class='fl main_car_title_ic' src='/image/page/home/main_car_label.png'></image>
+                        <view class='fr main_car_title_txt'>低首付</view>
+                        <view class='clear'></view>
+                        <image mode='aspectFit' class='main_car_img' src='/image/page/home/che1.png'></image>
+                        <view class='car_info_size car_brand_tx'>牌子和型号</view>
+                        <view class='car_info_size car_one_tx'>首付*元</view>
+                        <view class='car_info_size car_money_tx'>月供32054元</view>
+                    </view>
+                    <view class='main_car_box'>
+                        <image class='fl main_car_title_ic' src='/image/page/home/main_car_label.png'></image>
+                        <view class='fr main_car_title_txt'>低首付</view>
+                        <view class='clear'></view>
+                        <image mode='aspectFit' class='main_car_img' src='/image/page/home/che1.png'></image>
+                        <view class='car_info_size car_brand_tx'>牌子和型号</view>
+                        <view class='car_info_size car_one_tx'>首付*元</view>
+                        <view class='car_info_size car_money_tx'>月供32054元</view>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+</view>
+<view class='center' style='color:#7f8699;font-size:50rpx;padding:15rpx 0;'>我方报价</view>

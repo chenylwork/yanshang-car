@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/main/login/login",
+    "pages/main/register/register",
+    "pages/logs/logs",
+    "pages/type/type",
+    "pages/cart/cart",
+    "pages/find/find",
+    "pages/me/me",
+    "pages/main/pass/pass"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "来个车",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#000000",
+    "backgroundColor": "#FFF",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "/image/home.png",
+        "selectedIconPath": "/image/sel_home.png"
+      },
+      {
+        "pagePath": "pages/type/type",
+        "text": "分类",
+        "iconPath": "/image/fenlei.png",
+        "selectedIconPath": "/image/sel_fenlei.png"
+      },
+      {
+        "pagePath": "pages/find/find",
+        "text": "发现",
+        "iconPath": "/image/faxian.png",
+        "selectedIconPath": "/image/sel_faxian.png"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车",
+        "iconPath": "/image/gouwuche.png",
+        "selectedIconPath": "/image/sel_gouwuche.png"
+      },
+      {
+        "pagePath": "pages/main/login/login",
+        "text": "我的",
+        "iconPath": "/image/me.png",
+        "selectedIconPath": "/image/sel_me.png"
+      }
+    ]
+  },
+  "debug": true
+}
